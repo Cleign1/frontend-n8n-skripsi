@@ -102,9 +102,10 @@ def send_full_csv():
     except Exception as e:
         return jsonify({"error": f"Gagal membaca file CSV: {str(e)}"}), 500
 
-    external_api_url = "https://n8n.ibnukhaidar.live/webhook/testing-send-api"
+    external_api_url = "https://n8n.ibnukhaidar.live/webhook/update_stock"
+    # external_api_url = "https://n8n.ibnukhaidar.live/webhook-test/update_stock"
 
-    batch_size = 100
+    batch_size = 1000
     total = len(rows)
     responses = []
 
