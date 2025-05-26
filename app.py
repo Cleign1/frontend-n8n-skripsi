@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, jsonify
 import os
 from dotenv import load_dotenv
 from pathlib import Path
 import csv
 import json
+import requests
 
 env_path = Path("./.env")
 loaded = load_dotenv(dotenv_path=env_path)
@@ -83,9 +84,69 @@ def upload_daily_sales():
 
     return render_template('daily_sales.html', json_data=json_data, files=files, selected_file=selected_file)
 
+@app.route('/api/send_full_csv', methods=['POST'])
+def send_full_csv():
+    data = request.get_json()
+    filename = data.get('filename') if data else None
+    if not filename:
+        return jsonify({"error": "Filename tidak disertakan"}), 400
+
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.isfile(filepath):
+        return jsonify({"error": "File tidak ditemukan"}), 404
+
+    try:
+        with open(filepath, newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            rows = list(reader)
+    except Exception as e:
+        return jsonify({"error": f"Gagal membaca file CSV: {str(e)}"}), 500
+
+    external_api_url = "https://n8n.ibnukhaidar.live/webhook/testing-send-api"
+
+    batch_size = 100
+    total = len(rows)
+    responses = []
+
+    for i in range(0, total, batch_size):
+        batch = rows[i:i+batch_size]
+        try:
+            response = requests.post(
+                external_api_url,
+                json=batch,
+                headers={"Content-Type": "application/json"},
+                timeout=30
+            )
+            response.raise_for_status()
+            try:
+                resp_json = response.json()
+            except ValueError:
+                resp_json = response.text
+            responses.append({
+                "batch_index": i//batch_size,
+                "status_code": response.status_code,
+                "response": resp_json
+            })
+        except requests.exceptions.RequestException as e:
+            return jsonify({
+                "error": f"Gagal kirim batch ke {external_api_url}: {str(e)}",
+                "sent_batches": responses
+            }), 500
+
+    return jsonify({
+        "message": f"File {filename} berhasil dikirim ke API eksternal dalam {len(responses)} batch",
+        "batch_responses": responses
+    })
+
+
 @app.route('/predictions')
 def predictions():
     return render_template('predictions.html')
+
+@app.route('/manage_csv')
+def manage_csv():
+    files = list_uploaded_files()
+    return render_template('manage_csv.html', files=files)
 
 
 if __name__ == '__main__':
