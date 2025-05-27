@@ -105,7 +105,7 @@ def send_full_csv():
     external_api_url = "https://n8n.ibnukhaidar.live/webhook/update_stock"
     # external_api_url = "https://n8n.ibnukhaidar.live/webhook-test/update_stock"
 
-    batch_size = 1000
+    batch_size = 2000
     total = len(rows)
     responses = []
 
