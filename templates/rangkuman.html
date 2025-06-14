@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rangkuman</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="icon" href="/static/logo_desktop.svg" type="image/svg+xml">
+</head>
+<body class="min-h-screen bg-gray-100">
+
+    {% include "components/header.html" %}
+
+    <div class="max-w-3xl mx-auto p-8 bg-white rounded-lg shadow-lg mt-8">
+        <h1 class="text-4xl font-bold mb-6 text-center text-gray-800">Rangkuman</h1>
+
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Total Stok</h2>
+            <p class="text-lg text-gray-700">{{ total_stok }}</p>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Prediksi Stok</h2>
+            <p class="text-lg text-gray-700">{{ prediksi_stok }}</p>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-4">File Terakhir Diupload</h2>
+            <p class="text-lg text-gray-700">{{ last_uploaded_file }}</p>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Tanggal Upload Terakhir</h2>
+            <p class="text-lg text-gray-700">{{ last_upload_date }}</p>
+        </div>
+
+    </div>
+    
+</body>
+</html>
