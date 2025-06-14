@@ -216,11 +216,6 @@ def send_full_csv():
 def predictions():
     return render_template('predictions.html')
 
-@app.route('/manage_csv')
-def manage_csv():
-    files = list_uploaded_files()
-    return render_template('manage_csv.html', files=files)
-
 @app.route('/rangkuman')
 def rangkuman():
     return render_template('rangkuman.html')
