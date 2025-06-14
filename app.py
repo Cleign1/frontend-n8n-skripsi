@@ -5,6 +5,7 @@ from pathlib import Path
 import csv
 import json
 import requests
+import datetime
 
 env_path = Path("./.env")
 loaded = load_dotenv(dotenv_path=env_path)
@@ -18,6 +19,11 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
+
+current_app_status = {
+    "status": "Idle",
+    "last_updated": datetime.datetime.now().isoformat()
+}
 
 @app.route('/')
 def index():
@@ -83,6 +89,70 @@ def update_stok():
             flash("Silakan pilih file dari daftar atau upload file CSV.")
 
     return render_template('upload_stok.html', json_data=json_data, files=files, selected_file=selected_file)
+
+@app.route('/api/status', methods=['GET', 'POST'])
+def status_endpoint():
+    """
+    Endpoint ini digunakan untuk mendapatkan status aplikasi.
+    Endpoint ini menerima GET request untuk mendapatkan status saat ini.
+    Atau POST request untuk memperbarui status aplikasi.
+    
+    Contoh Response Get:
+    {
+        "status": "Idle",
+        "last_updated": "2023-10-01T12:00:00"
+    }
+    Payload untuk POST:
+    {
+        "status": "Idle",
+        "code": 200
+}
+    Contoh Response Post:
+    {
+        "message": "Status berhasil diperbarui",
+        "current_status": {
+            "status": "Dalam Proses",
+            "last_updated": "2023-10-01T12:00:00"
+        }
+    }
+    """
+    if request.method == 'POST':
+        return status_workflow()
+    else:
+        return jsonify(current_app_status)
+
+def status_workflow():
+    """
+    Api ini digunakan untuk mengirim status workflow dari n8n ke frontend ini.
+    Endpoint ini menerima POST request dengan JSON payload yang berisi status workflow.
+    Contoh payload:
+    {
+        "status": "Dalam Proses",
+        "code": 201,
+    }
+    """
+    global current_app_status
+    
+    # 1. Ambil data dari request dari JSON
+    data = request.get_json()
+    
+    # 2. Validasi Sederhana
+    if not data or 'status' not in data:
+        # Jika data tidak valid, kembalikan error
+        return jsonify({"error": "Data tidak valid"}), 400
+    
+    # 3. Ambil informasi dari data yang diterima
+    new_status = data.get('status')
+    
+    # 4. Proses data
+    current_app_status['status'] = new_status
+    current_app_status['last_updated'] = datetime.datetime.now().isoformat()
+    
+    return jsonify({
+        "message": "Status berhasil diperbarui",
+        "current_status": current_app_status
+    }), 202
+
 
 @app.route('/api/send_full_csv', methods=['POST'])
 def send_full_csv():
