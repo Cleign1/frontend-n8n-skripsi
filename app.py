@@ -212,9 +212,9 @@ def send_full_csv():
     })
 
 
-@app.route('/predictions')
-def predictions():
-    return render_template('predictions.html')
+@app.route('/prediksi-stok')
+def prediksi_stok():
+    return render_template('prediksi_stok.html')
 
 @app.route('/rangkuman')
 def rangkuman():
