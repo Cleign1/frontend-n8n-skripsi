@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Update Stok Harian</title>
+    <!-- TailwindCSS CDN untuk pakai Tailwind di Flask -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
+</head>
+
+<!-- Menggunakan layout flexbox untuk mendorong footer ke bawah -->
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+    <!-- ===== Bagian Header (Navbar) ===== -->
+    {% include "components/header.html" %}
+
+    <!-- ===== Konten Utama ===== -->
+    <main class="flex-grow flex items-center justify-center py-12">
+        <div class="w-full max-w-4xl mx-auto p-8 flex flex-col items-center text-center">
+
+            <!-- Judul dan Subjudul -->
+            <h1 class="text-3xl font-bold text-gray-900">Update Stok Harian</h1>
+            <p class="mt-2 mb-8 text-gray-600">untuk memulai Update Stok Silahkan Upload File CSV</p>
+
+            <!-- FORMULIR UTAMA -->
+            <!-- Semua aksi (upload dan pilih file) akan men-submit form ini -->
+            <form id="upload-form" action="{{ url_for('update_stok') }}" method="post" enctype="multipart/form-data" class="w-full flex flex-col items-center">
+
+                <!-- Tombol Aksi: Upload atau Pilih File -->
+                <div class="flex items-center gap-4 mb-8">
+                    <!-- Tombol Upload File yang terlihat oleh pengguna -->
+                    <label for="file-input" class="cursor-pointer bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-md shadow-sm hover:bg-gray-300 transition-colors">
+                        Upload File Baru
+                    </label>
+
+                    <!-- Tombol untuk membuka modal pilih file -->
+                    <button type="button" id="open-modal-btn" class="cursor-pointer bg-blue-600 text-white font-semibold py-2 px-6 rounded-md shadow-sm hover:bg-blue-700 transition-colors">
+                        Pilih File Tersimpan
+                    </button>
+                </div>
+
+                <!-- Input File yang sebenarnya, tersembunyi. `onchange` akan auto-submit form -->
+                <input type="file" name="file" id="file-input" accept=".csv" class="hidden" onchange="document.getElementById('upload-form').submit();" />
+
+                <!-- 
+                    DROPDOWN TERSEMBUNYI
+                    Ini adalah elemen kunci yang akan diisi oleh JavaScript saat file dari modal dipilih.
+                    Nama 'selected_file' cocok dengan request.form.get('selected_file') di Flask.
+                -->
+                <select name="selected_file" id="selected_file" class="hidden">
+                    <option value="">-- Pilih file --</option>
+                    {% for f in files %}
+                    <option value="{{ f }}" {% if f==selected_file %}selected{% endif %}>{{ f }}</option>
+                    {% endfor %}
+                </select>
+
+                <!-- Placeholder untuk tabel/preview data CSV -->
+                <div id="preview-box" class="w-full max-w-3xl min-h-[24rem] bg-gray-200 rounded-lg flex items-center justify-center p-4 border border-gray-300">
+                    {% if json_data %}
+                        <!-- Jika ada data, tampilkan dalam format pre (JSON) -->
+                        <pre class="text-left text-xs whitespace-pre-wrap overflow-auto h-96 w-full bg-white p-4 rounded-md">{{ json_data }}</pre>
+                    {% else %}
+                        <!-- Jika tidak ada data, tampilkan placeholder -->
+                        <p class="text-gray-500">(Tabel berisi data file csv)</p>
+                    {% endif %}
+                </div>
+
+                <!-- Tombol Aksi Utama -->
+                <button id="send-full-csv-btn" type="button" class="mt-8 bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-8 rounded-md shadow transition-colors">
+                    Mulai Update
+                </button>
+            </form>
+            <!-- Akhir Formulir Utama -->
+        </div>
+    </main>
+    <!-- Akhir Konten Utama -->
+    
+    <!-- STRUKTUR MODAL/POP-UP UNTUK PILIH FILE -->
+    <div id="file-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <!-- Header Modal -->
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-xl font-semibold">Pilih File CSV dari Server</h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-800 text-2xl">&times;</button>
+            </div>
+            
+            <!-- Konten Modal (Daftar File) -->
+            <div class="p-4 max-h-80 overflow-y-auto">
+                <ul id="file-list" class="space-y-2">
+                    {% if files %}
+                        {% for f in files %}
+                            <li data-filename="{{ f }}" class="p-3 text-left cursor-pointer rounded-md hover:bg-gray-100 transition-colors border">
+                                {{ f }}
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="p-3 text-gray-500">Tidak ada file yang tersimpan.</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Footer Status Bar (Fixed) ===== -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-white text-gray-700 text-sm p-2 flex justify-between px-4 border-t border-gray-200">
+        <span>Status</span>
+        <span class="font-medium">Ready</span>
+    </footer>
+
+    <!-- ============================================= -->
+    <!-- SEMUA LOGIKA JAVASCRIPT ADA DISINI            -->
+    <!-- ============================================= -->
+    <script>
+        // --- LOGIKA TOMBOL "MULAI UPDATE" (UNTUK MENGIRIM KE API LAIN) ---
+        // Script ini tetap sama, karena ia memanggil API yang berbeda (/api/send_full_csv)
+        document.getElementById('send-full-csv-btn').addEventListener('click', async function () {
+            const selectedFile = document.getElementById('selected_file').value;
+            if (!selectedFile) {
+                alert("Pilih atau upload dulu file CSV untuk ditampilkan!");
+                return;
+            }
+
+            console.log(`Mengirim file untuk diupdate: ${selectedFile}`);
+            
+            try {
+                // Ini adalah panggilan API untuk proses "Update", bukan untuk menampilkan data
+                const response = await fetch("/api/send_full_csv", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ filename: selectedFile })
+                });
+
+                const result = await response.json();
+                alert("Response dari API: " + JSON.stringify(result));
+            } catch (error) {
+                alert("Gagal mengirim data untuk update: " + error);
+            }
+        });
+
+
+        // --- LOGIKA MODAL UNTUK "PILIH FILE TERSIMPAN" (TELAH DIMODIFIKASI) ---
+        
+        const openModalBtn = document.getElementById('open-modal-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modal = document.getElementById('file-modal');
+        const fileList = document.getElementById('file-list');
+
+        openModalBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        // ### PERUBAHAN UTAMA ADA DISINI ###
+        // Logika ini sekarang tidak menggunakan fetch, tapi men-submit form.
+        fileList.addEventListener('click', (event) => {
+            if (event.target.tagName === 'LI' && event.target.dataset.filename) {
+                const filename = event.target.dataset.filename;
+                
+                // 1. Ambil dropdown yang tersembunyi
+                const hiddenSelect = document.getElementById('selected_file');
+                
+                // 2. Atur nilainya sesuai dengan file yang diklik
+                hiddenSelect.value = filename;
+
+                // 3. Submit form utama untuk memuat ulang halaman dan menampilkan data
+                //    Ini akan memicu blok `if selected_file ...` di Flask Anda.
+                document.getElementById('upload-form').submit();
+            }
+        });
+    </script>
+
+</body>
+</html>
