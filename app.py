@@ -31,8 +31,8 @@ def list_uploaded_files():
             files.append(f)
     return sorted(files)
 
-@app.route('/daily_sales', methods=['GET', 'POST'])
-def upload_daily_sales():
+@app.route('/update-stok', methods=['GET', 'POST'])
+def update_stok():
     json_data = None
     files = list_uploaded_files()
     selected_file = None
@@ -82,7 +82,7 @@ def upload_daily_sales():
         else:
             flash("Silakan pilih file dari daftar atau upload file CSV.")
 
-    return render_template('daily_sales.html', json_data=json_data, files=files, selected_file=selected_file)
+    return render_template('upload_stok.html', json_data=json_data, files=files, selected_file=selected_file)
 
 @app.route('/api/send_full_csv', methods=['POST'])
 def send_full_csv():
@@ -102,9 +102,9 @@ def send_full_csv():
     except Exception as e:
         return jsonify({"error": f"Gagal membaca file CSV: {str(e)}"}), 500
 
-    # external_api_url = "https://n8n.ibnukhaidar.live/webhook/update_stock"
-    external_api_url = "http://localhost:5678/webhook/update_stock"
+    # external_api_url = "http://localhost:5678/webhook/update_stock"
     # external_api_url = "http://localhost:5678/webhook-test/update_stock"
+    external_api_url = "https://n8n.ibnukhaidar.live/webhook/update_stock"
     # external_api_url = "https://n8n.ibnukhaidar.live/webhook-test/update_stock"
 
     batch_size = 500
@@ -151,6 +151,9 @@ def manage_csv():
     files = list_uploaded_files()
     return render_template('manage_csv.html', files=files)
 
+@app.route('/rangkuman')
+def rangkuman():
+    return render_template('rangkuman.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
