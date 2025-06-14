@@ -1,8 +1,9 @@
 <!-- templates/components/header.html -->
-<nav class="bg-blue-600 text-white px-6 py-4 shadow-md">
+<nav class="bg-yellow-100 text-black px-6 py-4 shadow-md font-semibold">
   <ul class="flex space-x-6 max-w-7xl mx-auto justify-center">
-    <li><a href="{{ url_for('index') }}" class="hover:underline">Home</a></li>
-    <li><a href="{{ url_for('upload_daily_sales') }}" class="hover:underline">Upload</a></li>
-    <li><a href="{{ url_for('predictions') }}" class="hover:underline">Prediction</a></li>
+    <li><a href="{{ url_for('index') }}" class="hover:text-gray-500">Home</a></li>
+    <li><a href="{{ url_for('update_stok') }}" class="hover:text-gray-500">Update Stok</a></li>
+    <li><a href="{{ url_for('predictions') }}" class="hover:text-gray-500">Prediksi Stok</a></li>
+    <li><a href="{{ url_for('rangkuman') }}" class="hover:text-gray-500">Summary</a></li>
   </ul>
 </nav>
