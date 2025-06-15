@@ -19,13 +19,13 @@
                 Prediksi Stok
             </h1>
 
-            <form method="post" action="#" class="w-full flex flex-col items-center gap-6">
+            <form id="prediction-form" method="post" action="#" class="w-full flex flex-col items-center gap-6">
 
                 <label for="prediction-date" class="text-base text-gray-600">Pilih Tanggal</label>
 
                 <input type="date" id="prediction-date" name="prediction_date" min="2025-04-01" max="2025-04-15" class="w-full bg-white border border-gray-300 rounded-md py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                 <button type="submit"
-                    class="bg-gray-300 text-gray-800 font-semibold py-3 px-10 mt-4 rounded-md shadow-sm hover:bg-gray-400 transition-colors">
+                        class="bg-gray-300 text-gray-800 font-semibold py-3 px-10 mt-4 rounded-md shadow-sm hover:bg-gray-400 transition-colors">
                     Mulai
                 </button>
 
@@ -35,6 +35,8 @@
     </main>
 
     {% include "components/footer.html" %}
+
+    <script src="{{ url_for('static', filename='javascript/prediksi_stok.js') }}"></script>
 
 </body>
 
