@@ -3,38 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rangkuman</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link rel="icon" href="/static/logo_desktop.svg" type="image/svg+xml">
+    <title>Summary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
 </head>
-<body class="min-h-screen bg-gray-100">
-
+<body class="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
+    
     {% include "components/header.html" %}
 
-    <div class="max-w-3xl mx-auto p-8 bg-white rounded-lg shadow-lg mt-8">
-        <h1 class="text-4xl font-bold mb-6 text-center text-gray-800">Rangkuman</h1>
+    <main class="flex-grow flex items-center justify-center py-12">
+        <div class="w-full max-w-4xl mx-auto p-8 flex flex-col items-center text-center">
+            
+            <h1 class="text-4xl font-bold text-gray-800 mb-8">
+                Summary
+            </h1>
 
-        <div class="mb-6">
-            <h2 class="text-2xl font-semibold mb-4">Total Stok</h2>
-            <p class="text-lg text-gray-700">{{ total_stok }}</p>
+            <div id="preview-box" class="w-full max-w-3xl min-h-[24rem] bg-gray-200 rounded-lg flex items-center justify-center p-4 border border-gray-300">
+                {% if json_data %}
+                    <pre class="text-left text-xs whitespace-pre-wrap overflow-auto h-96 w-full bg-white p-4 rounded-md">{{ json_data }}</pre>
+                {% else %}
+                    <p class="text-gray-500">(Tabel berisi data file csv)</p>
+                {% endif %}
+            </div>
+
+            <p class="text-lg text-gray-600 mt-8">
+                Barang yang menipis stoknya akan muncul di tabel atas ini.
+            </p>
+
         </div>
+    </main>
 
-        <div class="mb-6">
-            <h2 class="text-2xl font-semibold mb-4">Prediksi Stok</h2>
-            <p class="text-lg text-gray-700">{{ prediksi_stok }}</p>
-        </div>
+    {% include "components/footer.html" %}
 
-        <div class="mb-6">
-            <h2 class="text-2xl font-semibold mb-4">File Terakhir Diupload</h2>
-            <p class="text-lg text-gray-700">{{ last_uploaded_file }}</p>
-        </div>
-
-        <div class="mb-6">
-            <h2 class="text-2xl font-semibold mb-4">Tanggal Upload Terakhir</h2>
-            <p class="text-lg text-gray-700">{{ last_upload_date }}</p>
-        </div>
-
-    </div>
-    
 </body>
 </html>
