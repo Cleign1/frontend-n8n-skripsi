@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,36 +7,35 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
 </head>
-
 <body class="min-h-screen bg-gray-50 flex flex-col">
     {% include "components/header.html" %}
 
     <main class="flex-grow flex items-center justify-center">
         <div class="w-full max-w-sm mx-auto p-8 text-center">
-
             <h1 class="text-4xl font-bold text-gray-800 mb-10">
                 Prediksi Stok
             </h1>
 
             <form id="prediction-form" method="post" action="#" class="w-full flex flex-col items-center gap-6">
-
                 <label for="prediction-date" class="text-base text-gray-600">Pilih Tanggal</label>
 
-                <input type="date" id="prediction-date" name="prediction_date" min="2025-04-01" max="2025-04-15" class="w-full bg-white border border-gray-300 rounded-md py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                <input type="date" 
+                       id="prediction-date" 
+                       name="prediction_date" 
+                       min="2025-04-01" 
+                       max="2025-04-15" 
+                       class="w-full bg-white border border-gray-300 rounded-md py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+
                 <button type="submit"
                         class="bg-gray-300 text-gray-800 font-semibold py-3 px-10 mt-4 rounded-md shadow-sm hover:bg-gray-400 transition-colors">
                     Mulai
                 </button>
-
             </form>
-
         </div>
     </main>
 
     {% include "components/footer.html" %}
 
     <script src="{{ url_for('static', filename='javascript/prediksi_stok.js') }}"></script>
-
 </body>
-
 </html>
