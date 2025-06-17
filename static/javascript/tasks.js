@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </button>
                         
                         ${isRunning ? `
-                            <button onclick="terminateTask('${task.task_id}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                            <button onclick="abortTask('${task.task_id}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
                                 Terminate
                             </button>
                         ` : `
@@ -182,61 +182,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    window.terminateTask = async function(taskId) {
-        if (!confirm(`Are you sure you want to terminate task ${taskId}?`)) {
+        window.abortTask = async function(taskId) {
+        if (!confirm(`Are you sure you want to abort task ${taskId}?`)) {
             return;
         }
-        
-        // Show immediate feedback
+
+        // Give immediate visual feedback
         const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
         if (taskCard) {
             taskCard.style.opacity = '0.5';
-            const terminateBtn = taskCard.querySelector('button[onclick*="terminateTask"]');
-            if (terminateBtn) {
-                terminateBtn.textContent = 'Terminating...';
-                terminateBtn.disabled = true;
-            }
         }
-        
+
         try {
-            const response = await fetch(`/api/tasks/${taskId}/terminate`, {
+            // FIX: Change the URL to point to our new /abort endpoint
+            const response = await fetch(`/api/tasks/${taskId}/abort`, {
                 method: 'POST'
             });
-            
+
             const result = await response.json();
-            
+
             if (response.ok) {
                 alert(result.message);
-                loadTasks();
-                
-                // Close modal if it's open for this task
-                if (currentTaskId === taskId) {
-                    taskDetailModal.classList.add('hidden');
-                }
+                loadTasks(); // Refresh the task list
             } else {
                 alert('Error: ' + result.error);
-                // Restore UI state on error
-                if (taskCard) {
-                    taskCard.style.opacity = '1';
-                    const terminateBtn = taskCard.querySelector('button[onclick*="terminateTask"]');
-                    if (terminateBtn) {
-                        terminateBtn.textContent = 'Terminate';
-                        terminateBtn.disabled = false;
-                    }
-                }
+                if (taskCard) taskCard.style.opacity = '1'; // Restore on error
             }
         } catch (error) {
-            console.error('Error terminating task:', error);
-            alert('Error terminating task: ' + error.message);
-            // Restore UI state on error
-            if (taskCard) {
-                taskCard.style.opacity = '1';
-                const terminateBtn = taskCard.querySelector('button[onclick*="terminateTask"]');
-                if (terminateBtn) {
-                    terminateBtn.textContent = 'Terminate';
-                    terminateBtn.disabled = false;
-                }
-            }
+            console.error('Error aborting task:', error);
+            alert('Error aborting task: ' + error.message);
+            if (taskCard) taskCard.style.opacity = '1'; // Restore on error
         }
     };
 

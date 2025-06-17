@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Home - Dasbor Simulasi</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" href="/static/logo_desktop.svg" type="image/svg+xml">
+    <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
 
@@ -18,7 +18,7 @@
 
             <div class="mb-12 flex flex-col items-center gap-3">
                 <p class="text-base text-gray-600">Status Platform</p>
-                <div id="status-indicator" class="font-semibold py-2 px-6 rounded-md shadow-sm transition-all duration-300">
+                <div id="status-indicator" class="font-semibold py-2 px-6 rounded-md shadow-sm">
                     Mengecek...
                 </div>
             </div>

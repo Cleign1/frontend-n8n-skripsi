@@ -14,15 +14,15 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error("Error fetching status:", error);
       statusIndicator.textContent = "Error";
       statusIndicator.className =
-        "font-semibold py-2 px-6 rounded-md shadow-sm transition-all duration-300 bg-red-500 text-white";
+        "font-semibold py-2 px-6 rounded-md shadow-sm bg-red-500 text-white";
     }
   }
 
   function updateDashboardUI(data) {
     statusIndicator.textContent = data.status || "Unknown";
-    
+
     statusIndicator.className =
-      "font-semibold py-2 px-6 rounded-md shadow-sm transition-all duration-300"; // Reset class dasar
+      "font-semibold py-2 px-6 rounded-md shadow-sm"; // Reset class dasar
 
     switch ((data.status || "idle").toLowerCase()) {
       case "process":
@@ -63,5 +63,5 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   fetchAndUpdateStatus();
-  setInterval(fetchAndUpdateStatus, 3000); // Cek status setiap 3 detik
+  setInterval(fetchAndUpdateStatus, 3000);
 });
