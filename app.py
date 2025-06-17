@@ -23,8 +23,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Configure Celery BEFORE creating the celery instance
 app.config.update(
-    broker_url='redis://localhost:6379/0',
-    result_backend='redis://localhost:6379/0',
+    broker_url='redis://192.168.1.16:6379/0',
+    result_backend='redis://192.168.1.16:6379/0',
     # Windows-specific configurations
     worker_pool='solo',
     task_serializer='json',
@@ -81,7 +81,7 @@ celery.conf.update(
 
 # --- Koneksi Redis untuk Status ---
 try:
-    redis_conn = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
+    redis_conn = redis.StrictRedis(host='192.168.1.16', port=6379, db=0, decode_responses=True)
     # Test connection
     redis_conn.ping()
     print("Redis connection successful!")
