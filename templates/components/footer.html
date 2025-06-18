@@ -7,6 +7,15 @@
                 <span id="footer-status-value" class="text-sm font-medium text-gray-900">Loading...</span>
             </div>
         </div>
+
+        <div class="flex items-center gap-4">
+            <button id="show-task-logs-btn" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                Task Logs
+            </button>
+            <button id="show-server-logs-btn" class="text-sm font-medium text-green-600 hover:text-green-800">
+                Server Logs
+            </button>
+        </div>
         
         <div class="text-xs text-gray-500">
             Last updated: <span id="last-updated">--</span>
@@ -14,4 +23,24 @@
     </div>
 </footer>
 
+<!-- Log modal structure for live logs -->
+<div id="log-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-gray-900 text-white rounded-lg shadow-2xl w-full max-w-4xl h-4/5 flex flex-col">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center p-4 border-b border-gray-700">
+            <h3 id="log-modal-title" class="text-xl font-semibold font-mono">Live Logs</h3>
+            <button id="close-log-modal-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+
+        <!-- Modal Content (The Log Display) -->
+        <div class="p-4 flex-grow overflow-y-auto font-mono text-sm bg-black rounded-b-lg">
+            <pre id="log-container" class="whitespace-pre-wrap"></pre>
+        </div>
+    </div>
+</div>
+
 <script src="{{ url_for('static', filename='javascript/footer.js') }}"></script>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script src="{{ url_for('static', filename='javascript/logs.js') }}"></script>
