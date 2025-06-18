@@ -1,11 +1,25 @@
 # make_celery.py
-from app import create_app
+import logging
+from app import create_app, SocketIOHandler  # <-- Import the handler class directly
 from celery_app import celery
+from celery.signals import after_setup_logger
 
-# By calling create_app(), we ensure that the init_celery() function
-# runs. This modifies the 'celery' object that we imported from celery_app,
-# making it aware of the Flask application context.
+# Create the Flask app to establish an application context for tasks
 app = create_app()
 
-# Now, when the Celery command line tool imports 'celery' from this file,
-# it gets the fully configured instance.
+
+@after_setup_logger.connect
+def setup_loggers(logger, *args, **kwargs):
+    """
+    This function is called when the Celery worker sets up its logger.
+    We add our custom SocketIOHandler to it.
+    """
+    # Create a new handler instance for the Celery logger
+    socket_handler = SocketIOHandler()
+    socket_handler.setLevel(logging.INFO)
+    socket_handler.setFormatter(logging.Formatter(
+        '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+    ))
+
+    # Add the custom handler to the Celery logger
+    logger.addHandler(socket_handler)
