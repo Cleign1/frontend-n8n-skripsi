@@ -1,0 +1,22 @@
+name: fe-n8n
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  # Python Version
+  - python=3.13
+
+  # Core Application Packages
+  - flask
+  - flask-socketio
+  - celery
+  - redis-py  # Modern Python client for Redis
+  - boto3
+  - requests
+  - pydantic
+  - pyyaml
+  - python-dotenv
+  - gitpython
+
+  # Pip for any non-conda packages
+  - pip
