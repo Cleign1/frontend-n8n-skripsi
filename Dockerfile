@@ -4,7 +4,7 @@ LABEL authors="ibnuk"
 
 # 2. Set default environment variables.
 # WARNING: These are defaults. Override sensitive values at runtime!
-ENV SECRET_KEY="a-default-secret-key-that-is-not-secure-and-should-be-changed"
+# SECRET_KEY should be provided securely at runtime via environment variables or Docker secrets.
 ENV EXTERNAL_API_URL="http://api.example.com"
 ENV REDIS_HOST="localhost"
 ENV REDIS_PORT="6379"
