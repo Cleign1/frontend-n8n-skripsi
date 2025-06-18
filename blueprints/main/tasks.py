@@ -19,7 +19,6 @@ def process_csv_in_batches(self, filename, external_api_url):
     redis_conn = current_app.redis_conn
     status_key = "batch_job_status"
 
-    # --- FIX: The check function now looks at the Redis flag ---
     def check_aborted():
         """
         Checks if an abort flag has been set for this task in Redis.
@@ -31,18 +30,15 @@ def process_csv_in_batches(self, filename, external_api_url):
             raise Exception("Task aborted by user")
 
     def update_status_in_redis(status_dict):
-        # ... (this function is correct) ...
         if redis_conn:
             redis_conn.set(status_key, json.dumps(status_dict))
             redis_conn.hset(f"task:{task_id}", "last_message", status_dict.get('message', ''))
 
     def update_all_status(status_text, detailed_message=None):
-        # ... (this function is correct) ...
         update_app_status_via_api(status_text)
         if detailed_message and redis_conn:
             redis_conn.hset(f"task:{task_id}", "last_message", detailed_message)
 
-    # --- Task Execution Starts Here ---
     try:
         check_aborted()
 
