@@ -1,15 +1,25 @@
 # app.py
 import os
 import redis
+import logging
 from flask import Flask
 from config import Config
 from celery_app import celery
 from blueprints import register_blueprints
 from celery.contrib.abortable import AbortableTask
+from flask_socketio import SocketIO
 
 # Get the absolute path of the project's root directory (where app.py is located)
 _basedir = os.path.abspath(os.path.dirname(__file__))
 
+# Socket initialization
+socketio = SocketIO(message_queue=Config.CELERY_BROKER_URL)
+
+class SocketIOHandler(logging.Handler):
+    def emit(self, record):
+        log_entry = self.format(record)
+        # The 'socketio' object is globally available in this module
+        socketio.emit('log_message', {'data': log_entry, 'logger_name': record.name})
 
 def create_app(config_class=Config):
     """
@@ -33,12 +43,23 @@ def create_app(config_class=Config):
     app.config['UPLOAD_FOLDER'] = upload_folder
 
     # Initialize extensions
+    socketio.init_app(app)
     init_celery(app)
 
     # Register blueprints
     register_blueprints(app)
 
-    # --- START OF FIX ---
+
+    # --- Setup Logging for the Flask App ---
+    socket_handler = SocketIOHandler()
+    socket_handler.setLevel(logging.INFO)
+    socket_handler.setFormatter(logging.Formatter(
+        '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+    ))
+    app.logger.addHandler(socket_handler)
+    logging.getLogger('werkzeug').addHandler(socket_handler) # Capture Werkzeug logs too
+
+
     # Initialize Redis connection directly in the app factory.
     # This replaces the deprecated `@app.before_first_request`.
     try:
@@ -53,7 +74,6 @@ def create_app(config_class=Config):
     except redis.ConnectionError as e:
         print(f"Warning: Redis connection failed. {e}")
         app.redis_conn = None
-    # --- END OF FIX ---
 
     return app
 
