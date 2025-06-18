@@ -4,10 +4,12 @@ import csv
 import json
 import datetime
 import requests
+import logging
 from flask import current_app
 from celery_app import celery
 from ..api.utils import update_app_status_via_api
 
+logger = logging.getLogger(__name__)
 
 @celery.task(bind=True)
 def process_csv_in_batches(self, filename, external_api_url):
@@ -18,6 +20,7 @@ def process_csv_in_batches(self, filename, external_api_url):
     task_id = self.request.id
     redis_conn = current_app.redis_conn
     status_key = "batch_job_status"
+    logger.info(f"Task started: {self.request.id}")
 
     def check_aborted():
         """
@@ -55,7 +58,7 @@ def process_csv_in_batches(self, filename, external_api_url):
 
         with open(filepath, newline='', encoding='utf-8') as csvfile:
             rows = list(csv.DictReader(csvfile))
-        print(f"Successfully read {len(rows)} rows from {filename}")
+        logger.info(f"Successfully read {len(rows)} rows from {filename}")
 
         # STEP 2: Main Processing Loop
         batch_size = 500
