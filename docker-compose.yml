@@ -15,8 +15,6 @@ services:
     depends_on:
       - redis
     restart: always
-    environment:
-      - REDIS_HOST=redis
     env_file:
       - .env
 
