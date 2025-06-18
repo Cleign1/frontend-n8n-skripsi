@@ -1,6 +1,5 @@
 name: fe-n8n
 channels:
-  - defaults
   - conda-forge
 dependencies:
   # Python Version
