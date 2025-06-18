@@ -19,30 +19,24 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateDashboardUI(data) {
-    statusIndicator.textContent = data.status || "Unknown";
+    const status = data.status || "idle";
+    statusIndicator.textContent = status;
 
-    statusIndicator.className =
-      "font-semibold py-2 px-6 rounded-md shadow-sm"; // Reset class dasar
+    statusIndicator.className = "font-semibold py-2 px-6 rounded-md shadow-sm";
 
-    switch ((data.status || "idle").toLowerCase()) {
-      case "process":
-      case "processing":
-      case "running":
-        statusIndicator.classList.add("bg-yellow-400", "text-yellow-800");
-        break;
-      case "completed":
-      case "success":
-      case "done":
-        statusIndicator.classList.add("bg-green-400", "text-green-800");
-        break;
-      case "failed":
-      case "error":
-        statusIndicator.classList.add("bg-red-500", "text-white");
-        break;
-      case "idle":
-      default:
-        statusIndicator.classList.add("bg-gray-300", "text-gray-800");
-        break;
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('error') || statusLower.includes('❌') || statusLower.includes('gagal')) {
+      statusIndicator.classList.add('bg-red-500', 'text-white');
+    } else if (statusLower.includes('completed') || statusLower.includes('selesai')) {
+      statusIndicator.classList.add('bg-green-500', 'text-white');
+    } else if (statusLower.includes('processing') || statusLower.includes('sending') || statusLower.includes('🔄') || statusLower.includes('📤') || statusLower.includes('memproses') || statusLower.includes('mengirim')) {
+      statusIndicator.classList.add('bg-blue-500', 'text-white');
+    } else if (statusLower.includes('starting') || statusLower.includes('🚀') || statusLower.includes('memulai')) {
+      statusIndicator.classList.add('bg-yellow-500', 'text-white');
+    } else if (statusLower.includes('terminated') || statusLower.includes('⏹️') || statusLower.includes('dihentikan')) {
+      statusIndicator.classList.add('bg-orange-500', 'text-white');
+    } else {
+      statusIndicator.classList.add('bg-gray-400', 'text-gray-700');
     }
 
     if (data.last_updated) {
