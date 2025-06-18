@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
     } else if (statusLower.includes('terminated') || statusLower.includes('⏹️') || statusLower.includes('dihentikan')) {
       statusIndicator.classList.add('bg-orange-500', 'text-white');
     } else {
-      statusIndicator.classList.add('bg-gray-400', 'text-gray-700');
+      statusIndicator.classList.add('bg-gray-400', 'text-white');
     }
 
     if (data.last_updated) {
