@@ -81,7 +81,7 @@ def process_csv_in_batches(self, filename, external_api_url):
             update_status_in_redis(status_update)
             update_all_status(f"📤 Mengirim batch {i + 1}/{total_batches}", f"Mengirim batch {i + 1}...")
 
-            response = requests.post(external_api_url, json=batch, timeout=20)
+            response = requests.post(external_api_url, json=batch, timeout=120)
             response.raise_for_status()
 
         # STEP 3: Finalization if loop completes successfully
