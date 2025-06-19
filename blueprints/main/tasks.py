@@ -61,7 +61,7 @@ def process_csv_in_batches(self, filename, external_api_url):
         logger.info(f"Successfully read {len(rows)} rows from {filename}")
 
         # STEP 2: Main Processing Loop
-        batch_size = 500
+        batch_size = os.getenv("BATCH_SIZE", 500)
         total_rows = len(rows)
         total_batches = (total_rows + batch_size - 1) // batch_size
         update_all_status(f"📤 Mengirim data ({total_rows} baris)", f"Ditemukan {total_rows} baris.")
