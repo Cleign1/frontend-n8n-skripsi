@@ -61,7 +61,7 @@ def process_csv_in_batches(self, filename, external_api_url):
         logger.info(f"Successfully read {len(rows)} rows from {filename}")
 
         # STEP 2: Main Processing Loop
-        batch_size = 1000
+        batch_size = os.getenv("BATCH_SIZE", 500)
         total_rows = len(rows)
         total_batches = (total_rows + batch_size - 1) // batch_size
         update_all_status(f"📤 Mengirim data ({total_rows} baris)", f"Ditemukan {total_rows} baris.")
@@ -81,7 +81,7 @@ def process_csv_in_batches(self, filename, external_api_url):
             update_status_in_redis(status_update)
             update_all_status(f"📤 Mengirim batch {i + 1}/{total_batches}", f"Mengirim batch {i + 1}...")
 
-            response = requests.post(external_api_url, json=batch, timeout=120)
+            response = requests.post(external_api_url, json=batch, timeout=60)
             response.raise_for_status()
 
         # STEP 3: Finalization if loop completes successfully
