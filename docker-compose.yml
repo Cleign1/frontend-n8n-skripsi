@@ -5,6 +5,8 @@ services:
     ports:
       - "6380:6379"
     restart: always
+    networks:
+      - fe-n8n-network
 
   # 2. Your Application Service (Flask + Celery)
   app:
@@ -17,4 +19,10 @@ services:
     restart: always
     env_file:
       - .env
+    networks:
+        - fe-n8n-network
+
+networks:
+    fe-n8n-network:
+        external: true
 
