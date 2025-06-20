@@ -14,59 +14,77 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedDate = dateInput.value;
 
             if (selectedDate) {
-                // --- PERUBAHAN UTAMA ADA DI SINI ---
+                const task_name = `Prediksi Stok ${new Date().toISOString()}`;
+                const task_id = "prediksi_" + new Date().getTime();
 
-                // 1. Buat sebuah object JavaScript dengan data yang ingin dikirim.
-                //    Kunci (key) di sini (misal: "prediction_date") akan menjadi
-                //    nama field di n8n nantinya.
                 const dataToSend = {
                     prediction_date: selectedDate,
-                    request_time: new Date().toISOString() // Contoh menambahkan data lain
+                    request_time: new Date().toISOString(),
+                    task_id: task_id,
                 };
 
-                // 2. Konversi object JavaScript menjadi string JSON.
-                //    Ini adalah format teks yang akan dikirim melalui jaringan.
-                //    Argumen 'null, 2' membuatnya lebih rapi (pretty-print).
-                const jsonDataString = JSON.stringify(dataToSend, null, 2);
+                const task = {
+                    task_id: task_id,
+                    task_name: task_name,
+                    filename: 'N/A',
+                    created_at: new Date().toISOString(),
+                    status: 'Sedang Prediksi',
+                    last_message: 'Menunggu prediksi dari n8n...'
+                };
 
-                // 3. Tampilkan output untuk debugging dan konfirmasi.
-                
-                // Tampilkan di console browser (tekan F12 untuk melihat).
-                // Ini sangat berguna untuk memastikan object dan format JSON sudah benar.
-                console.log("Object JavaScript yang dibuat:", dataToSend);
-                console.log("String JSON yang akan dikirim:", jsonDataString);
-
-                // Tampilkan di pop-up alert agar langsung terlihat.
-                alert("Data JSON yang akan dikirim ke n8n:\n\n" + jsonDataString);
-
-                // --- LANGKAH SELANJUTNYA: MENGIRIM DATA KE N8N ---
-                // Kode di bawah ini bisa Anda aktifkan (hapus komentar //) 
-                // jika sudah siap mengirim data.
-                /*
-                const n8nWebhookUrl = 'URL_WEBHOOK_N8N_ANDA_DISINI';
-
-                fetch(n8nWebhookUrl, {
-                    method: 'POST', // Metode untuk mengirim data
-                    headers: {
-                        'Content-Type': 'application/json' // Memberi tahu server kita mengirim JSON
-                    },
-                    body: jsonDataString // Body request berisi string JSON
+                fetch('/api/tasks/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(task)
                 })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                        throw new Error(`Network response was not ok, status: ${response.status}`);
                     }
-                    return response.json(); // Mengambil response dari n8n
+                    return response.json();
                 })
                 .then(data => {
-                    console.log('Sukses terkirim ke n8n:', data);
-                    alert('Data berhasil dikirim ke n8n!');
+                    if(data.status === 'success') {
+                        const jsonDataString = JSON.stringify(dataToSend, null, 2);
+
+                        console.log("String JSON yang akan dikirim:", jsonDataString);
+                        alert("Data JSON yang akan dikirim ke n8n:\n\n" + jsonDataString);
+
+                        const n8nWebhookUrl = 'http://192.168.1.16:8084/ac25626a-c6bf-4259-b2db-ebc776b3ff08'; // IMPORTANT: REPLACE WITH YOUR N8N WEBHOOK URL
+
+                        // --- FIX: Modified this section to handle empty responses from the webhook ---
+                        fetch(n8nWebhookUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: jsonDataString
+                        })
+                        .then(response => {
+                            // We no longer try to parse a JSON response.
+                            // We only check if the request was successful (e.g., status 200 OK).
+                            if (!response.ok) {
+                                throw new Error(`Network response from n8n was not ok. Status: ${response.status}`);
+                            }
+                            // If we get here, the request was accepted by n8n.
+                            console.log('Sukses terkirim ke n8n!');
+                            alert('Data berhasil dikirim ke n8n!');
+                        })
+                        .catch(error => {
+                            console.error('Gagal mengirim ke n8n:', error);
+                            alert('Terjadi kesalahan saat mengirim data ke n8n.');
+                            fetch(`/api/tasks/${task_id}/update`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ status: 'FAILURE', last_message: 'Gagal mengirim request ke n8n.' })
+                            });
+                        });
+                    }
                 })
                 .catch(error => {
-                    console.error('Gagal mengirim ke n8n:', error);
-                    alert('Terjadi kesalahan saat mengirim data.');
+                    console.error('Error creating task:', error);
+                    alert('Gagal membuat task baru. Lihat console untuk detail.');
                 });
-                */
 
             } else {
                 alert('Silakan pilih tanggal terlebih dahulu.');
