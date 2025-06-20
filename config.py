@@ -24,7 +24,7 @@ class Config:
 
     # Windows-specific Celery settings
     CELERY_CONFIG = {
-        'worker_pool': 'prefork',
+        'worker_pool': 'solo',
         'task_serializer': 'json',
         'accept_content': ['json'],
         'result_serializer': 'json',

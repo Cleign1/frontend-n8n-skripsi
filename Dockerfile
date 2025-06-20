@@ -42,7 +42,7 @@ COPY . .
 # Create the startup script
 RUN echo '#!/bin/sh' > start.sh && \
     echo 'echo "--- Starting Celery Worker ---"' >> start.sh && \
-    echo '/opt/conda/envs/fe-n8n/bin/celery -A make_celery.celery worker --loglevel=info --concurrency=10 -n worker1@%h &' >> start.sh && \
+    echo '/opt/conda/envs/fe-n8n/bin/celery -A make_celery.celery worker --loglevel=info &' >> start.sh && \
     echo 'echo "--- Starting Flask App ---"' >> start.sh && \
     echo '/opt/conda/envs/fe-n8n/bin/flask --app run.py --debug run --host=0.0.0.0' >> start.sh && \
     chmod +x start.sh
