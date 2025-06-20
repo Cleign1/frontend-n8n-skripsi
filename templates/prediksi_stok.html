@@ -22,8 +22,8 @@
                 <input type="date" 
                        id="prediction-date" 
                        name="prediction_date" 
-                       min="2025-04-04"
-                       max="2025-04-15" 
+                       min="2025-04-01"
+                       max="2025-04-15"
                        class="w-full bg-white border border-gray-300 rounded-md py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
 
                 <button type="submit"
@@ -36,6 +36,9 @@
 
     {% include "components/footer.html" %}
 
+    <script>
+        const n8nWebhookUrl = "{{ n8n_webhook_url or '' }}";
+    </script>
     <script src="{{ url_for('static', filename='javascript/prediksi_stok.js') }}"></script>
 </body>
 </html>
