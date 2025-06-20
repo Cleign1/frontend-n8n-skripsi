@@ -1,13 +1,13 @@
-// File: static/javascript/prediksi_stok.js (VERSI BARU)
+// File: static/javascript/prediksi_stok.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    
+
     const predictionForm = document.getElementById('prediction-form');
 
     if (predictionForm) {
-        
+
         predictionForm.addEventListener('submit', function(event) {
-            
+
             event.preventDefault();
 
             const dateInput = document.getElementById('prediction-date');
@@ -50,9 +50,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log("String JSON yang akan dikirim:", jsonDataString);
                         alert("Data JSON yang akan dikirim ke n8n:\n\n" + jsonDataString);
 
-                        const n8nWebhookUrl = 'http://192.168.1.16:8084/ac25626a-c6bf-4259-b2db-ebc776b3ff08'; // IMPORTANT: REPLACE WITH YOUR N8N WEBHOOK URL
+                        // --- REMOVE THE HARDCODED URL --
 
-                        // --- FIX: Modified this section to handle empty responses from the webhook ---
+                        // --- ADD A CHECK FOR THE CONFIGURED URL ---
+                        if (!n8nWebhookUrl) {
+                            alert('Error: N8N_WEBHOOK_URL is not configured in the backend.');
+                            fetch(`/api/tasks/${task_id}/update`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ status: 'FAILURE', last_message: 'N8N_WEBHOOK_URL is not configured.' })
+                            });
+                            return; // Stop execution
+                        }
+
+                        // Use the variable passed from the template
                         fetch(n8nWebhookUrl, {
                             method: 'POST',
                             headers: {
@@ -61,12 +72,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             body: jsonDataString
                         })
                         .then(response => {
-                            // We no longer try to parse a JSON response.
-                            // We only check if the request was successful (e.g., status 200 OK).
                             if (!response.ok) {
                                 throw new Error(`Network response from n8n was not ok. Status: ${response.status}`);
                             }
-                            // If we get here, the request was accepted by n8n.
                             console.log('Sukses terkirim ke n8n!');
                             alert('Data berhasil dikirim ke n8n!');
                         })
