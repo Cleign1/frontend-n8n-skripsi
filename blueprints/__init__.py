@@ -10,7 +10,6 @@ def register_blueprints(app):
     # Import the blueprint objects from their respective route files
     from .main.routes import main_bp
     from .upload.routes import upload_bp
-    from .prediction.routes import prediction_bp
     from .summary.routes import summary_bp
     from .tasks.routes import tasks_bp
     from .api.routes import api_bp
@@ -18,7 +17,6 @@ def register_blueprints(app):
     # Register each blueprint with the Flask app instance
     app.register_blueprint(main_bp)
     app.register_blueprint(upload_bp)
-    app.register_blueprint(prediction_bp)
     app.register_blueprint(summary_bp)
 
     # It's good practice to give UI blueprints a unique name if their
