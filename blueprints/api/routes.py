@@ -154,3 +154,39 @@ def get_task_status(task_id):
         return jsonify(task_info)
     except Exception as e:
         return jsonify({"error": f"Gagal mendapatkan status task: {e}"}), 500
+
+@api_bp.route('/tasks/create', methods=['POST'])
+def create_task_api():
+    data = request.get_json()
+    task_id = data.get('task_id')
+    task_name = data.get('task_name')
+    filename = data.get('filename')
+    created_at = data.get('created_at')
+    status = data.get('status')
+    last_message = data.get('last_message')
+
+    if not task_id or not task_name:
+        return jsonify({"error": "task_id and task_name are required"}), 400
+
+    store_task_info(task_id, task_name, filename, created_at, status, last_message)
+
+    # --- CHANGE: If it's a prediction task, update the global app status ---
+    if task_id and task_id.startswith('prediksi_'):
+        update_app_status_via_api(f"📤 Mengirim prediksi untuk task: {task_id}")
+
+    return jsonify({"status": "success"}), 201
+
+@api_bp.route('/tasks/<task_id>/update', methods=['POST'])
+def update_task_api(task_id):
+    data = request.get_json()
+    status = data.get('status')
+    last_message = data.get('last_message')
+
+    redis_conn = current_app.redis_conn
+    if redis_conn:
+        if status:
+            redis_conn.hset(f"task:{task_id}", "status", status)
+        if last_message:
+            redis_conn.hset(f"task:{task_id}", "last_message", last_message)
+        return jsonify({"status": "success"}), 200
+    return jsonify({"error": "redis connection failed"}), 500
