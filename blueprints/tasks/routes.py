@@ -14,6 +14,7 @@ def tasks():
 
 @tasks_bp.route('/prediksi-stok', methods=['GET', 'POST'])
 def prediksi_stok_task():
+    from flask import current_app
     if request.method == 'POST':
         data = request.get_json(silent=True)
 
@@ -40,4 +41,6 @@ def prediksi_stok_task():
 
         return jsonify({"status": "success"}), 200
 
-    return render_template('prediksi_stok.html')
+    n8n_webhook_url = current_app.config.get("N8N_WEBHOOK_URL")
+
+    return render_template('prediksi_stok.html', n8n_webhook_url=n8n_webhook_url)
