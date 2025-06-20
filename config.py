@@ -16,6 +16,8 @@ class Config:
     REDIS_PORT = int(os.getenv('REDIS_PORT'))
     REDIS_DB = int(os.getenv('REDIS_DB', 0))
 
+    # N8N Webhook URL
+    N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
     # Celery configuration
     CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
     result_backend = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
