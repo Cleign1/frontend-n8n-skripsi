@@ -3,6 +3,8 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     const predictionForm = document.getElementById('prediction-form');
+    const configElement = document.getElementById('js-config');
+    const n8nWebhookUrl = configElement ? configElement.dataset.n8nUrl : null;
 
     if (predictionForm) {
 
