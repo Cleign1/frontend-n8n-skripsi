@@ -36,9 +36,7 @@
 
     {% include "components/footer.html" %}
 
-    <script>
-        const n8nWebhookUrl = "{{ n8n_webhook_url or '' }}";
-    </script>
+    <div id="js-config" data-n8n-url="{{ n8n_webhook_url }}"></div>
     <script src="{{ url_for('static', filename='javascript/prediksi_stok.js') }}"></script>
 </body>
 </html>
