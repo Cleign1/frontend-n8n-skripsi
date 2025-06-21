@@ -8,6 +8,7 @@ from celery_app import celery
 from blueprints import register_blueprints
 from celery.contrib.abortable import AbortableTask
 from flask_socketio import SocketIO
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Get the absolute path of the project's root directory (where app.py is located)
 _basedir = os.path.abspath(os.path.dirname(__file__))
@@ -32,6 +33,8 @@ def create_app(config_class=Config):
         template_folder=os.path.join(_basedir, 'templates'),
         static_folder=os.path.join(_basedir, 'static')
     )
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     app.config.from_object(config_class)
 
