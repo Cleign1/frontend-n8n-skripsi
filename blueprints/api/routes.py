@@ -2,8 +2,7 @@
 import os
 import json
 import datetime
-from itertools import count
-
+import requests
 from flask import Blueprint, jsonify, request, current_app
 from .utils import update_app_status_via_api, current_app_status
 from ..tasks.utils import get_all_tasks, remove_task_from_list, store_task_info
@@ -14,6 +13,54 @@ from celery.contrib.abortable import AbortableAsyncResult
 
 api_bp = Blueprint('api', __name__)
 
+@api_bp.route('/forward_prediction', methods=['POST'])
+def forward_prediction():
+    """
+    Acts as a server-side proxy to the n8n webhook to avoid CORS issues.
+    It receives the prediction request from the frontend and forwards it to the n8n service.
+    """
+    data_to_forward = request.get_json()
+    task_id = data_to_forward.get('task_id')
+    redis_conn = current_app.redis_conn
+
+    # Get the target webhook URL from environment variables
+    n8n_webhook_url = current_app.config.get("N8N_WEBHOOK_URL")
+
+    if not n8n_webhook_url:
+        error_msg = 'N8N_WEBHOOK_URL is not configured in the backend.'
+        print(f"ERROR: {error_msg}")
+        # Update task status to FAILURE
+        if task_id and redis_conn:
+            redis_conn.hset(f"task:{task_id}", "status", "FAILURE")
+            redis_conn.hset(f"task:{task_id}", "last_message", error_msg)
+        return jsonify({"error": error_msg}), 500
+
+    try:
+        # Update global app status to show we're sending the request
+        update_app_status_via_api(f"📤 Mengirim permintaan prediksi untuk task: {task_id}")
+
+        # Make the server-to-server request
+        response = requests.post(
+            n8n_webhook_url,
+            json=data_to_forward,
+            headers={'Content-Type': 'application/json'},
+            timeout=30  # 30-second timeout
+        )
+        # Raise an exception for bad status codes (4xx or 5xx)
+        response.raise_for_status()
+
+        print(f"Successfully forwarded prediction request for task {task_id} to n8n.")
+        return jsonify({"message": "Request successfully forwarded to n8n"}), 200
+
+    except requests.exceptions.RequestException as e:
+        error_msg = f"Gagal mengirim request ke n8n: {e}"
+        print(f"ERROR: {error_msg}")
+        # Update task status to FAILURE
+        if task_id and redis_conn:
+            redis_conn.hset(f"task:{task_id}", "status", "FAILURE")
+            redis_conn.hset(f"task:{task_id}", "last_message", error_msg)
+        # 502 Bad Gateway is a fitting error code for a proxy failure
+        return jsonify({"error": str(e)}), 502
 
 # --- BATCH AND STATUS API ---
 @api_bp.route('/start_batch_process', methods=['POST'])
