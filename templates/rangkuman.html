@@ -3,37 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Summary</title>
+    <title>Summary Agent</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
+    <style>
+        /* To make table rows clickable */
+        .clickable-row {
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
-    
+
     {% include "components/header.html" %}
 
-    <main class="flex-grow flex items-center justify-center py-12">
-        <div class="w-full max-w-4xl mx-auto p-8 flex flex-col items-center text-center">
-            
-            <h1 class="text-4xl font-bold text-gray-800 mb-8">
-                Summary
-            </h1>
+    <main class="flex-grow py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-5xl mx-auto">
 
-            <div id="preview-box" class="w-full max-w-3xl min-h-[24rem] bg-gray-200 rounded-lg flex items-center justify-center p-4 border border-gray-300">
-                {% if json_data %}
-                    <pre class="text-left text-xs whitespace-pre-wrap overflow-auto h-96 w-full bg-white p-4 rounded-md">{{ json_data }}</pre>
-                {% else %}
-                    <p class="text-gray-500">(Tabel berisi data file csv)</p>
-                {% endif %}
+            <div class="bg-white p-6 rounded-lg shadow-md mb-10">
+                 <h1 class="text-2xl font-bold text-gray-800 mb-4">Run New Inventory Analysis</h1>
+                 <p class="text-gray-600 mb-6">Click the button to start the process. The agent will fetch the latest sales data from Google Cloud Storage and send it to the n8n workflow for analysis.</p>
+                 <button
+                    id="start-summary-btn"
+                    class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    data-start-url="{{ url_for('summary.start_summary') }}"
+                    data-tasks-url="{{ url_for('tasks_ui.tasks') }}">
+                    Start Summary Process
+                </button>
+                 <div id="notification-area" class="mt-6 text-green-700 font-medium"></div>
             </div>
 
-            <p class="text-lg text-gray-600 mt-8">
-                Barang yang menipis stoknya akan muncul di tabel atas ini.
-            </p>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                 <h2 class="text-2xl font-bold text-gray-800 mb-4">Analysis History</h2>
+                 <div class="overflow-x-auto">
+                     <table class="min-w-full divide-y divide-gray-200">
+                         <thead class="bg-gray-50">
+                             <tr>
+                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Analysis Date</th>
+                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task ID</th>
+                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report</th>
+                             </tr>
+                         </thead>
+                         <tbody class="bg-white divide-y divide-gray-200">
+                             {% for task in tasks %}
+                                 <tr class="hover:bg-gray-50 clickable-row" data-href="{{ url_for('summary.show_summary_result', task_id=task.task_id) }}">
+                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ task.timestamp | format_datetime }}</td>
+                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono"><code>{{ task.task_id }}</code></td>
+                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 hover:underline">View Report &rarr;</td>
+                                 </tr>
+                             {% else %}
+                                 <tr>
+                                     <td colspan="3" class="text-center text-gray-500 py-6">No analysis has been run yet.</td>
+                                 </tr>
+                             {% endfor %}
+                         </tbody>
+                     </table>
+                 </div>
+            </div>
 
         </div>
     </main>
 
     {% include "components/footer.html" %}
 
+    <script src="{{ url_for('static', filename='javascript/summary_agent.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rows = document.querySelectorAll('.clickable-row');
+            rows.forEach(row => {
+                row.addEventListener('click', () => {
+                    window.location.href = row.dataset.href;
+                });
+            });
+        });
+    </script>
 </body>
 </html>
