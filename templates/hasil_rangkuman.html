@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Result</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-800 flex flex-col">
+
+    {% include "components/header.html" %}
+
+    <main class="flex-grow py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
+            <a href="{{ url_for('summary.rangkuman') }}" class="text-blue-600 hover:underline mb-6 inline-block">&larr; Back to Analysis List</a>
+
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Analysis Result</h1>
+            <p class="text-sm text-gray-500 mb-6">
+                Analysis from: {{ task_info.timestamp | format_datetime if task_info else 'N/A' }}
+            </p>
+
+            {% if result %}
+                <div class="prose max-w-none bg-gray-50 p-6 rounded-md border border-gray-200">
+                    <pre class="text-gray-800" style="white-space: pre-wrap; word-wrap: break-word;">{{ result }}</pre>
+                </div>
+            {% else %}
+                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+                    <p class="font-bold">Result Not Found</p>
+                    <p>The analysis for this task might still be processing, or the result has not been received from the workflow. Please check back later.</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    {% include "components/footer.html" %}
+
+</body>
+</html>
