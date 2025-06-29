@@ -18,6 +18,11 @@ class Config:
 
     # N8N Webhook URL
     N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
+
+    # GCP Bucket Config
+    GCP_BUCKET_NAME = os.getenv("GCP_BUCKET_NAME")
+    N8N_SUMMARY_WEBHOOK_URL = os.getenv("N8N_SUMMARY_WEBHOOK_URL")
+
     # Celery configuration
     CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
     result_backend = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
