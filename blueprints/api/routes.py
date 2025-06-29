@@ -3,6 +3,7 @@ import os
 import json
 import datetime
 import requests
+import redis
 from flask import Blueprint, jsonify, request, current_app
 from .utils import update_app_status_via_api, current_app_status
 from ..tasks.utils import get_all_tasks, remove_task_from_list, store_task_info
@@ -237,3 +238,25 @@ def update_task_api(task_id):
             redis_conn.hset(f"task:{task_id}", "last_message", last_message)
         return jsonify({"status": "success"}), 200
     return jsonify({"error": "redis connection failed"}), 500
+
+
+@api_bp.route('/save-summary-result', methods=['POST'])
+def save_summary_result():
+    """
+    Webhook endpoint for n8n to post the final analysis result.
+    """
+    data = request.get_json()
+    if not data or 'task_id' not in data or 'summary' not in data:
+        return jsonify({"error": "Missing 'task_id' or 'summary' in request body"}), 400
+
+    task_id = data['task_id']
+    summary_text = data['summary']
+
+    try:
+        redis_client = redis.Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], db=0,
+                                   decode_responses=True)
+        # Store the result with an expiration time (e.g., 7 days)
+        redis_client.set(f'summary_result:{task_id}', summary_text, ex=604800)
+        return jsonify({"status": "success", "message": f"Result for task {task_id} saved."}), 200
+    except redis.exceptions.ConnectionError as e:
+        return jsonify({"error": "Could not connect to Redis", "details": str(e)}), 500
