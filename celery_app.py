@@ -9,8 +9,23 @@ celery = Celery(
     include=['blueprints.main.tasks'] # Points to where your tasks are defined
 )
 
-# Apply the detailed Celery configuration
-celery.conf.update(Config.CELERY_CONFIG)
+celery.conf.update(
+    task_serializer='json',
+    accept_content=['json'],
+    result_serializer='json',
+    timezone='Asia/Jakarta',
+    enable_utc=True,
+    broker_connection_retry_on_startup=True,
+)
 
-# Optional: subclass Task to have app context
-# This is handled in app.py in this new structure
+# Apply the detailed Celery configuration
+def create_celery_app(app):
+    celery.conf.update(app.config)
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
