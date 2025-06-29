@@ -9,6 +9,8 @@ from blueprints import register_blueprints
 from celery.contrib.abortable import AbortableTask
 from flask_socketio import SocketIO
 from werkzeug.middleware.proxy_fix import ProxyFix
+from dateutil import parser
+from babel.dates import format_datetime as babel_format_datetime
 
 # Get the absolute path of the project's root directory (where app.py is located)
 _basedir = os.path.abspath(os.path.dirname(__file__))
@@ -44,6 +46,18 @@ def create_app(config_class=Config):
         os.makedirs(upload_folder)
     # Store the absolute path in the config for consistency
     app.config['UPLOAD_FOLDER'] = upload_folder
+
+    # custom jinja filter untuk format datetime
+    @app.template_filter('format_datetime')
+    def _format_datetime(value, format='medium'):
+        if value is None:
+            return ""
+        dt = parser.parse(value)
+        if format == 'full':
+            format="EEEE, d MMMM y 'at' h:mm:ss a"
+        elif format == 'medium':
+            format="dd MMM y, HH:mm"
+        return babel_format_datetime(dt, format, locale='en')
 
     # Initialize extensions
     socketio.init_app(app)
