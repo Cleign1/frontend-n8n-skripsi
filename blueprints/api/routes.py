@@ -244,19 +244,34 @@ def update_task_api(task_id):
 def save_summary_result():
     """
     Webhook endpoint for n8n to post the final analysis result.
+    It expects a `flask_task_id` in the query string to link the result
+    to the correct Celery task.
     """
-    data = request.get_json()
-    if not data or 'task_id' not in data or 'summary' not in data:
-        return jsonify({"error": "Missing 'task_id' or 'summary' in request body"}), 400
+    # Get the task_id that we originally sent to the n8n webhook
+    task_id = request.args.get('flask_task_id')
+    if not task_id:
+        return jsonify({"error": "Query parameter 'flask_task_id' is required"}), 400
 
-    task_id = data['task_id']
-    summary_text = data['summary']
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid JSON payload"}), 400
 
     try:
         redis_client = redis.Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], db=0,
                                    decode_responses=True)
-        # Store the result with an expiration time (e.g., 7 days)
-        redis_client.set(f'summary_result:{task_id}', summary_text, ex=604800)
+
+        # Store the entire JSON result from n8n
+        redis_client.set(f'summary_result:{task_id}', json.dumps(data), ex=604800) # Expires in 7 days
+
+        # Add the task_id to a persistent list for the history view
+        redis_client.lpush('summary_task_history', task_id)
+
+        # Update the status of the original Celery task
+        redis_client.hset(f"task:{task_id}", "status", "Prediksi Selesai")
+        redis_client.hset(f"task:{task_id}", "last_message", "Analysis complete. Report received from n8n.")
+
         return jsonify({"status": "success", "message": f"Result for task {task_id} saved."}), 200
     except redis.exceptions.ConnectionError as e:
         return jsonify({"error": "Could not connect to Redis", "details": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": "An unexpected error occurred", "details": str(e)}), 500
