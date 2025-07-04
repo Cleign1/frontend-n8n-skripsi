@@ -1,0 +1,29 @@
+# Docker specific
+Dockerfile
+docker-compose.yml
+.dockerignore
+readme.md
+
+# Python virtual environment
+.venv
+venv
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+
+# IDE and OS files
+.idea
+.vscode
+*.DS_Store
+
+# Local environment files
+.env
+uploads/
+
+# Dependency files (we only need requirements.txt)
+win_environment.yml
+linux_environment.yml
+pnpm-lock.yaml
+node_modules/
