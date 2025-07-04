@@ -22,7 +22,7 @@ services:
     restart: always
     env_file: .env
     environment:
-      - TZ="Asia/Jakarta"
+      - TZ=Asia/Jakarta
     networks:
       - fe-n8n-network
 
@@ -40,13 +40,12 @@ services:
     env_file: .env
     environment:
       - INTERNAL_API_BASE_URL=http://app:5000
-      - TZ="Asia/Jakarta"
+      - TZ=Asia/Jakarta
     networks:
       - fe-n8n-network
 
 volumes:
   frontend:
-    external: true
 
 networks:
   fe-n8n-network:
