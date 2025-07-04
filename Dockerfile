@@ -21,4 +21,5 @@ COPY . .
 EXPOSE 5000
 
 # Step 7: Define the command to run the application
-CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:5000", "app:create_app()"]
+#CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:5000", "app:create_app()"]
+CMD ["uv", "run", "flask", "--app", "run.py", "run", "--debug", "--host=0.0.0.0"]
