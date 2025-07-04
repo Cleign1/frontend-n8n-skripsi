@@ -8,8 +8,6 @@ services:
     restart: always
     networks:
       - fe-n8n-network
-    volumes:
-      - fe-n8n:/data
   # Service 2: The Flask Web Application
   app:
     build: . # Build the image from the Dockerfile in the current directory
@@ -22,8 +20,6 @@ services:
     env_file: .env
     networks:
       - fe-n8n-network
-    volumes:
-      - fe-n8n:/app
 
   # Service 3: The Celery Worker
   worker:
@@ -34,19 +30,10 @@ services:
     depends_on:
       - redis # Ensures redis starts before the worker
     restart: always
-    volumes:
-      - fe-n8n:/app
     env_file: .env
     networks:
       - fe-n8n-network
 
 networks:
   fe-n8n-network:
-    external: true
-
-
-volumes:
-  fe-n8n:
-    external: true
-  redis_n8n_data:
     external: true
