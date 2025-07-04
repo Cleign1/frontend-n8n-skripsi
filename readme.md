@@ -9,3 +9,14 @@ for starting the flask app
 running celery worker command
 
 ```celery -A make_celery.celery worker --loglevel=info --pool=solo -n worker1@%h```
+
+Using UV now
+
+### 1. Create the environment
+uv venv
+
+### 2. Activate it
+source .venv/bin/activate
+
+### 3. Install all packages from the lock file
+uv pip sync requirements.txt
