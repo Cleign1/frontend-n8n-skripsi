@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analysis Result</title>
+    <title>Analysis Result for {{ task_id }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
 </head>
@@ -12,24 +12,81 @@
     {% include "components/header.html" %}
 
     <main class="flex-grow py-12 px-4 sm:px-6 lg:px-8">
-        <div class="w-full max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
-            <a href="{{ url_for('summary.rangkuman') }}" class="text-blue-600 hover:underline mb-6 inline-block">&larr; Back to Analysis List</a>
+        <div class="w-full max-w-6xl mx-auto">
+            <a href="{{ url_for('summary.rangkuman') }}" class="text-blue-600 hover:underline mb-6 inline-block">&larr; Back to Analysis History</a>
 
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Analysis Result</h1>
-            <p class="text-sm text-gray-500 mb-6">
-                Analysis from: {{ task_info.timestamp | format_datetime if task_info else 'N/A' }}
-            </p>
+            <div class="bg-white p-8 rounded-lg shadow-md">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Analysis Report</h1>
+                <p class="text-sm text-gray-500 mb-8">
+                    Task ID: <code class="bg-gray-200 text-gray-700 rounded px-1">{{ task_id }}</code>
+                </p>
 
-            {% if result %}
-                <div class="prose max-w-none bg-gray-50 p-6 rounded-md border border-gray-200">
-                    <pre class="text-gray-800" style="white-space: pre-wrap; word-wrap: break-word;">{{ result }}</pre>
+                {% if result and result.top_5_understocked %}
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Top 5 Understocked Products</h2>
+                    <div class="space-y-6">
+                        {% for item in result.top_5_understocked %}
+                        <div>
+                            <div class="mb-2">
+                                <p class="font-semibold text-gray-800">{{ item.name }}</p>
+                                <p class="text-xs text-gray-500">ID: {{ item.id }}</p>
+                            </div>
+
+                            <div class="w-full bg-gray-200 rounded-full h-6 shadow-inner">
+                                {% set stock_percentage = (item.stock / item.predicted) * 100 if item.predicted > 0 else 0 %}
+
+                                <div class="bg-red-500 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                                     style="width: {{ '%.2f'|format(stock_percentage) }}%;">
+                                     {{ item.stock }}
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between text-sm mt-1">
+                                <span class="font-medium text-red-600">Current Stock: {{ item.stock }}</span>
+                                <span class="font-medium text-gray-600">Predicted Need: {{ item.predicted }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-            {% else %}
-                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
-                    <p class="font-bold">Result Not Found</p>
-                    <p>The analysis for this task might still be processing, or the result has not been received from the workflow. Please check back later.</p>
-                </div>
-            {% endif %}
+                {% endif %}
+
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Full Report from Google Drive</h2>
+                {% if csv_rows %}
+                    <div class="overflow-y-auto border border-gray-200 rounded-lg h-[70vh]">
+                        <table class="min-w-full divide-y divide-gray-200 table-fixed">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    {% for header in csv_headers %}
+                                        <th scope="col" class="sticky top-0 z-10 bg-gray-100 px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider
+                                            {% if loop.index0 == 0 %} w-32 {% elif loop.index0 == 1 %} w-auto {% else %} w-48 {% endif %}">
+                                            {{ header }}
+                                        </th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for row in csv_rows %}
+                                    <tr class="hover:bg-gray-50">
+                                        {% for cell in row %}
+                                            <td class="px-6 py-4 text-sm text-gray-700
+                                                {% if loop.index0 == 1 %} break-words {% endif %}">
+                                                {{ cell }}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+                        <p class="font-bold">Report Content Not Available or Empty</p>
+                        <p>{{ file_content_error or "The report file could not be downloaded, was empty, or is not in a valid CSV format." }}</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </main>
 
