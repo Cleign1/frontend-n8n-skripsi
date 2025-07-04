@@ -1,28 +1,52 @@
 services:
+  # Service 1: Redis for Celery message broker and backend
   redis:
     image: redis:alpine
     container_name: fe-n8n-redis
     ports:
-      - "6380:6379"
+      - "6379:6379" # Maps container port 6379 to host port 6380
     restart: always
     networks:
       - fe-n8n-network
-
-  # 2. Your Application Service (Flask + Celery)
+    volumes:
+      - fe-n8n:/data
+  # Service 2: The Flask Web Application
   app:
+    build: . # Build the image from the Dockerfile in the current directory
     container_name: fe-n8n-app
-    build: .
     ports:
-      - "5000:5000"
+      - "5000:5000" # Maps container port 5000 to host port 5000
     depends_on:
-      - redis
+      - redis # Ensures redis starts before the app
     restart: always
-    env_file:
-      - .env
+    env_file: .env
     networks:
-        - fe-n8n-network
+      - fe-n8n-network
+    volumes:
+      - fe-n8n:/app
+
+  # Service 3: The Celery Worker
+  worker:
+    build: . # Also builds from the same Dockerfile
+    container_name: fe-n8n-worker
+    # This command overrides the Dockerfile's CMD to start the celery worker
+    command: uv run celery -A make_celery.celery worker --loglevel=info --pool=solo
+    depends_on:
+      - redis # Ensures redis starts before the worker
+    restart: always
+    volumes:
+      - fe-n8n:/app
+    env_file: .env
+    networks:
+      - fe-n8n-network
 
 networks:
-    fe-n8n-network:
-        external: true
+  fe-n8n-network:
+    external: true
 
+
+volumes:
+  fe-n8n:
+    external: true
+  redis_n8n_data:
+    external: true
