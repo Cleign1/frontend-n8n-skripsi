@@ -8,16 +8,21 @@ services:
     restart: always
     networks:
       - fe-n8n-network
+
   # Service 2: The Flask Web Application
   app:
     build: . # Build the image from the Dockerfile in the current directory
     container_name: fe-n8n-app
     ports:
       - "5000:5000" # Maps container port 5000 to host port 5000
-    depends_on:
-      - redis # Ensures redis starts before the app
+#    depends_on:
+#      - redis # Ensures redis starts before the app
+    volumes:
+      - frontend:/app
     restart: always
     env_file: .env
+    environment:
+      - TZ="Asia/Jakarta"
     networks:
       - fe-n8n-network
 
@@ -26,13 +31,22 @@ services:
     build: . # Also builds from the same Dockerfile
     container_name: fe-n8n-worker
     # This command overrides the Dockerfile's CMD to start the celery worker
-    command: uv run celery -A make_celery.celery worker --loglevel=info --pool=solo
-    depends_on:
-      - redis # Ensures redis starts before the worker
+    command: uv run celery -A make_celery.celery worker --loglevel=info --pool=solo -n worker1@%ho
+#    depends_on:
+#      - redis # Ensures redis starts before the worker
+    volumes:
+      - frontend:/app
     restart: always
     env_file: .env
+    environment:
+      - INTERNAL_API_BASE_URL=http://app:5000
+      - TZ="Asia/Jakarta"
     networks:
       - fe-n8n-network
+
+volumes:
+  frontend:
+    external: true
 
 networks:
   fe-n8n-network:
