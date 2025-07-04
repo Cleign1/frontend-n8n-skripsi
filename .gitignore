@@ -4,3 +4,4 @@ uploads
 __pycache__
 .idea
 venv
+instance/gdrive_reports

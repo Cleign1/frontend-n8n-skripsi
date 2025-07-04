@@ -21,6 +21,7 @@ __pycache__
 # Local environment files
 .env
 uploads/
+instance/gdrive_reports/
 
 # Dependency files (we only need requirements.txt)
 win_environment.yml
