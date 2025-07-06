@@ -34,8 +34,6 @@ services:
     command: uv run celery -A make_celery.celery worker --loglevel=info --pool=solo -n worker1@%ho
 #    depends_on:
 #      - redis # Ensures redis starts before the worker
-    volumes:
-      - frontend:/app
     restart: always
     env_file: .env
     environment:

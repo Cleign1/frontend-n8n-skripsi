@@ -11,11 +11,24 @@ RUN apt-get update && apt-get install -y tzdata \
     && dpkg-reconfigure -f noninteractive tzdata \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN pip install uv
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
 
-COPY requirements.in .
-RUN uv pip compile requirements.in -o requirements.txt
-RUN uv pip sync --system requirements.txt
+# Download the latest installer
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+
+# Run the installer then remove it
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+
+# Ensure the installed binary is on the `PATH`
+ENV PATH="/root/.local/bin/:$PATH"
+
+RUN uv venv
+
+RUN /bin/bash -c "source .venv/bin/activate"
+
+COPY requirements.txt .
+
+RUN uv pip install -r requirements.txt
 
 COPY . .
 

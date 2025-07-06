@@ -6,7 +6,10 @@ celery = Celery(
     'frontend-n8n-skripsi',
     broker=Config.CELERY_BROKER_URL,
     backend=Config.result_backend,
-    include=['blueprints.main.tasks'] # Points to where your tasks are defined
+    include=[
+        'blueprints.main.tasks',
+        'blueprints.summary.task'  # Add this line
+    ]
 )
 
 celery.conf.update(
