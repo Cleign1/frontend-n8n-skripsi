@@ -18,7 +18,7 @@ services:
     depends_on:
       - redis # Ensures redis starts before the app
     volumes:
-      - .:/app
+      - app:/app
     restart: always
     env_file: .env
     environment:
@@ -43,6 +43,7 @@ services:
       - fe-n8n-network
 
 volumes:
+  app:
 
 networks:
   fe-n8n-network:
