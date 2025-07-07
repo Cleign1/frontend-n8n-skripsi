@@ -24,8 +24,6 @@ ENV PATH="/root/.local/bin/:$PATH"
 
 RUN uv venv
 
-RUN /bin/bash -c "source .venv/bin/activate"
-
 COPY requirements.txt .
 
 RUN uv pip install -r requirements.txt
