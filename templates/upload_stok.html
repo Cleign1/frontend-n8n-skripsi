@@ -31,12 +31,28 @@
                         Upload File Baru
                     </label>
 
-                    <button type="button" id="open-modal-btn" class="cursor-pointer bg-blue-600 text-white font-semibold py-2 px-6 rounded-md shadow-sm hover:bg-blue-700 transition-colors">
-                        Pilih File Tersimpan
+                    <button type="button" id="upload-gdrive-btn" class="cursor-pointer bg-green-600 text-white font-semibold py-2 px-6 rounded-md shadow-sm hover:bg-green-700 transition-colors">
+                        Upload ke Google Drive
+                    </button>
+                </div>
+
+                <!-- Date Picker -->
+                <div class="mb-4">
+                    <label for="date-picker" class="block text-sm font-medium text-gray-700 mb-1">Pilih Tanggal:</label>
+                    <input type="date" id="date-picker" name="selected_date" 
+                           min="2025-04-01" max="2025-04-15"
+                           class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+
+                <!-- Tombol Aksi Tambahan -->
+                <div class="mt-4">
+                    <button type="button" id="start-update-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-md shadow transition-colors">
+                        Mulai Update Stok
                     </button>
                 </div>
 
                 <input type="file" name="file" id="file-input" accept=".csv" class="hidden" onchange="document.getElementById('upload-form').submit();" />
+
 
                 <!-- 
                     DROPDOWN TERSEMBUNYI
@@ -51,49 +67,16 @@
                 </select>
 
                 <!-- Placeholder untuk tabel/preview data CSV -->
-                <div id="preview-box" class="w-full max-w-3xl min-h-[24rem] bg-gray-200 rounded-lg flex items-center justify-center p-4 border border-gray-300">
-                    {% if json_data %}
-                        <!-- Jika ada data, tampilkan dalam format pre (JSON) -->
-                        <pre class="text-left text-xs whitespace-pre-wrap overflow-auto h-96 w-full bg-white p-4 rounded-md">{{ json_data }}</pre>
-                    {% else %}
-                        <!-- Jika tidak ada data, tampilkan placeholder -->
-                        <p class="text-gray-500">Tabel berisi data file csv</p>
-                    {% endif %}
+                {% if json_data %}
+                <div id="preview-box" class="w-full max-w-3xl min-h-[24rem] bg-gray-200 rounded-lg flex items-center justify-center p-4 border border-gray-300 mt-8">
+                    <pre class="text-left text-xs whitespace-pre-wrap overflow-auto h-96 w-full bg-white p-4 rounded-md">{{ json_data }}</pre>
                 </div>
+                {% endif %}
 
-                <!-- Tombol Aksi Utama -->
-                <button id="send-full-csv-btn" type="button" class="mt-8 bg-gray-700 hover:bg-gray-800 text-white font-semibold py-3 px-8 rounded-md shadow transition-colors">
-                    Mulai Update
-                </button>
             </form>
         </div>
     </main>
     
-    <!-- STRUKTUR MODAL/POP-UP UNTUK PILIH FILE -->
-    <div id="file-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <!-- Header Modal -->
-            <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="text-xl font-semibold">Pilih File CSV dari Server</h3>
-                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-800 text-2xl">&times;</button>
-            </div>
-            
-            <!-- Konten Modal (Daftar File) -->
-            <div class="p-4 max-h-80 overflow-y-auto">
-                <ul id="file-list" class="space-y-2">
-                    {% if files %}
-                        {% for f in files %}
-                            <li data-filename="{{ f }}" class="p-3 text-left cursor-pointer rounded-md hover:bg-gray-100 transition-colors border">
-                                {{ f }}
-                            </li>
-                        {% endfor %}
-                    {% else %}
-                        <li class="p-3 text-gray-500">Tidak ada file yang tersimpan.</li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </div>
 
     <!-- ===== Footer Status Bar (Fixed) ===== -->
     {% include "components/footer.html" %}
@@ -101,6 +84,10 @@
     <!-- ============================================= -->
     <!-- Logika Javascript            -->
     <!-- ============================================= -->
+    <script>
+        // Pass the selected file from Flask to JavaScript
+        const selectedFileFromServer = "{{ selected_file or '' }}";
+    </script>
     <script src="{{ url_for('static', filename='javascript/upload_stok.js') }}"></script>
 
 </body>
