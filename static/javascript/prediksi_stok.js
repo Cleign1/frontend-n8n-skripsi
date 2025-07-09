@@ -18,9 +18,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const task_id = "prediksi_" + new Date().getTime();
 
                 const dataToSend = {
-                    prediction_date: selectedDate,
-                    request_time: new Date().toISOString(),
-                    task_id: task_id,
+                    "prediction_date": selectedDate,
+                    "task_id": task_id
                 };
 
                 const task = {
@@ -46,36 +45,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(data => {
                     if(data.status === 'success') {
-                        // Task created successfully, now send the request to our backend proxy.
-                        console.log("Task created, now sending to backend proxy.");
+                        // Task created successfully, now send the request to the prediction service.
+                        console.log("Task created, now sending to prediction service.");
                         alert("Task dibuat. Mengirim permintaan prediksi ke server...");
 
-                        // --- MODIFICATION ---
-                        // Send the request to our own backend proxy endpoint instead of directly to n8n.
-                        fetch('/api/forward_prediction', { // NEW, LOCAL ENDPOINT
+                        // Send the request to our own backend proxy endpoint.
+                        fetch('/api/predict_stok', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(dataToSend) // Send the data intended for n8n
+                            body: JSON.stringify(dataToSend)
                         })
                         .then(proxyResponse => {
                             if (!proxyResponse.ok) {
-                                // If the proxy itself returns an error, handle it.
                                 return proxyResponse.json().then(err => { throw new Error(err.error || `Proxy server failed with status: ${proxyResponse.status}`); });
                             }
-                            console.log('Sukses terkirim ke n8n via proxy!');
-                            alert('Data berhasil dikirim ke n8n!');
+                            console.log('Sukses terkirim ke layanan prediksi via proxy!');
+                            alert('Data berhasil dikirim untuk prediksi!');
                         })
                         .catch(error => {
-                            // This catch now handles failures from the proxy request.
-                            console.error('Gagal mengirim ke n8n via proxy:', error);
-                            alert('Terjadi kesalahan saat mengirim data ke n8n: ' + error.message);
+                            console.error('Gagal mengirim ke layanan prediksi via proxy:', error);
+                            alert('Terjadi kesalahan saat mengirim data untuk prediksi: ' + error.message);
                             // Update the task to show failure
                             fetch(`/api/tasks/${task_id}/update`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ status: 'FAILURE', last_message: `Gagal mengirim request ke n8n: ${error.message}` })
+                                body: JSON.stringify({ status: 'FAILURE', last_message: `Gagal mengirim request via proxy: ${error.message}` })
                             });
                         });
                     }
