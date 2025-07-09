@@ -3,74 +3,55 @@
 document.addEventListener('DOMContentLoaded', function() {
     
     // --- ELEMEN UI ---
-    const progressPopup = document.getElementById('progress-popup');
-    const progressBar = document.getElementById('progress-bar');
-    const progressMessage = document.getElementById('progress-message');
-    const closeProgressPopup = document.getElementById('close-progress-popup');
-    const sendBtn = document.getElementById('send-full-csv-btn');
-    
-    // Variabel untuk menampung interval polling
-    let pollingIntervalId = null;
+    const uploadGdriveBtn = document.getElementById('upload-gdrive-btn');
+    const startUpdateBtn = document.getElementById('start-update-btn');
+    const fileInput = document.getElementById('file-input');
+    const datePicker = document.getElementById('date-picker');
 
-    /**
-     * Fungsi untuk "bertanya" ke server mengenai status job
-     */
-    async function checkJobStatus() {
-        try {
-            const response = await fetch('/api/batch_status');
-            const data = await response.json();
-
-            // Tampilkan pop-up jika ada proses atau baru saja selesai
-            if (progressPopup) {
-                progressPopup.classList.remove('hidden');
-                progressBar.style.width = data.progress + '%';
-                progressMessage.textContent = data.message;
-            }
-            
-            // Jika proses sudah tidak berjalan (selesai atau error)
-            if (!data.is_running) {
-                if (pollingIntervalId) {
-                    clearInterval(pollingIntervalId);
-                    pollingIntervalId = null;
-                    console.log("Polling dihentikan karena proses selesai.");
-                }
-                // Biarkan pop-up terlihat beberapa detik agar pengguna bisa membaca pesan terakhir
-                setTimeout(() => {
-                    if (progressPopup) progressPopup.classList.add('hidden');
-                }, 5000);
-            }
-        } catch (error) {
-            console.error("Gagal melakukan polling status:", error);
-            if(progressMessage) progressMessage.textContent = "Gagal cek status.";
-            if (pollingIntervalId) clearInterval(pollingIntervalId);
+    function getFormattedDate() {
+        const selectedDate = datePicker.value;
+        if (!selectedDate) {
+            alert("Pilih tanggal terlebih dahulu!");
+            return null;
         }
+        return selectedDate.replace(/-/g, '');
     }
 
-    // --- LOGIKA TOMBOL "MULAI UPDATE" ---
-    if (sendBtn) {
-        sendBtn.addEventListener('click', async function () {
-            const selectedFile = document.getElementById('selected_file').value;
-            if (!selectedFile) {
+    if (uploadGdriveBtn) {
+        uploadGdriveBtn.addEventListener('click', async function () {
+            const clientSideFile = fileInput.files[0];
+            const formattedDate = getFormattedDate();
+
+            if (!formattedDate) return;
+
+            if (!clientSideFile && !selectedFileFromServer) {
                 alert("Pilih atau upload dulu file CSV!");
                 return;
             }
 
-            if (pollingIntervalId) clearInterval(pollingIntervalId); // Hentikan polling lama jika ada
+            const formData = new FormData();
+            
+            if (clientSideFile) {
+                formData.append('file', clientSideFile);
+            } else {
+                formData.append('server_filename', selectedFileFromServer);
+            }
+            
+            formData.append('selected_date', formattedDate);
 
             try {
-                const response = await fetch('/api/start_batch_process', {
+                const response = await fetch('/upload/upload_to_gdrive', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename: selectedFile })
+                    body: formData
                 });
 
                 const result = await response.json();
-                if (!response.ok) throw new Error(result.error || 'Gagal memulai proses.');
 
-                alert(result.message);
-                // Setelah proses berhasil dimulai, MULAI POLLING
-                checkJobStatus(); // Cek status pertama kali
-                pollingIntervalId = setInterval(checkJobStatus, 3000); // Cek setiap 3 detik
+                if (response.ok) {
+                    alert(result.message || 'File berhasil diupload ke Google Drive.');
+                } else {
+                    throw new Error(result.error || 'Gagal mengupload file.');
+                }
 
             } catch (error) {
                 alert('Error: ' + error.message);
@@ -78,34 +59,45 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Cek status saat halaman dimuat, kalau-kalau ada proses yang sedang berjalan
-    checkJobStatus();
+    if (startUpdateBtn) {
+        startUpdateBtn.addEventListener('click', async function() {
+            const formattedDate = getFormattedDate();
+            if (!formattedDate) return;
 
-    // --- LOGIKA MODAL UNTUK "PILIH FILE TERSIMPAN" ---
-    const openModalBtn = document.getElementById('open-modal-btn');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    const modal = document.getElementById('file-modal');
-    const fileList = document.getElementById('file-list');
+            const webhookUrl = 'https://n8n.ibnukhaidar.live/webhook/workflow-1-webhook';
+            const body = [{ date: formattedDate }];
 
-    if (openModalBtn && modal && closeModalBtn && fileList) {
-        openModalBtn.addEventListener('click', () => modal.classList.remove('hidden'));
-        closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
-        modal.addEventListener('click', (event) => {
-            if (event.target === modal) modal.classList.add('hidden');
-        });
-        fileList.addEventListener('click', (event) => {
-            if (event.target.tagName === 'LI' && event.target.dataset.filename) {
-                document.getElementById('selected_file').value = event.target.dataset.filename;
-                document.getElementById('upload-form').submit();
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (response.ok) {
+                    const statusMessage = `Proses update stok untuk tanggal ${formattedDate} telah berhasil dimulai.`;
+                    alert(statusMessage);
+
+                    // Update the app status via API
+                    try {
+                        await fetch('/api/status', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: statusMessage })
+                        });
+                    } catch (statusError) {
+                        console.error('Failed to update app status:', statusError);
+                    }
+
+                } else {
+                    const errorResult = await response.json();
+                    throw new Error(errorResult.message || `HTTP error! status: ${response.status}`);
+                }
+            } catch (error) {
+                alert('Error: Gagal memulai proses update stok. ' + error.message);
             }
-        });
-    }
-    
-    // Logika untuk tombol tutup pop up progress
-    if (closeProgressPopup) {
-        closeProgressPopup.addEventListener('click', () => {
-             if (progressPopup) progressPopup.classList.add('hidden');
-             if (pollingIntervalId) clearInterval(pollingIntervalId); // Juga hentikan polling
         });
     }
 });
