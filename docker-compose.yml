@@ -1,5 +1,5 @@
 services:
-  # Service 1: Redis for Celery message broker and backend
+  # Service 1: Redis for Celery message broker and backend edited from github terminal
   redis:
     image: redis:alpine
     container_name: fe-n8n-redis
