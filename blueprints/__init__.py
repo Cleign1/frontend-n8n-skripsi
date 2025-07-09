@@ -13,6 +13,7 @@ def register_blueprints(app):
     from .summary.routes import summary_bp
     from .tasks.routes import tasks_bp
     from .api.routes import api_bp
+    from .chat.routes import chat_bp
 
     # Register each blueprint with the Flask app instance
     app.register_blueprint(main_bp)
@@ -26,3 +27,4 @@ def register_blueprints(app):
     # For the API, we add a URL prefix so all its routes
     # will start with /api (e.g., /api/status, /api/tasks)
     app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(chat_bp)
