@@ -23,6 +23,7 @@ class Config:
     # GCP Bucket Config
     GCP_BUCKET_NAME = os.getenv("GCP_BUCKET_NAME")
     N8N_SUMMARY_WEBHOOK_URL = os.getenv("N8N_SUMMARY_WEBHOOK_URL")
+    WORKFLOW_2 = os.getenv("WORKFLOW_2")
 
     # Celery configuration
     CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
