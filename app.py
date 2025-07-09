@@ -16,7 +16,7 @@ from babel.dates import format_datetime as babel_format_datetime
 _basedir = os.path.abspath(os.path.dirname(__file__))
 
 # Socket initialization
-socketio = SocketIO(message_queue=Config.CELERY_BROKER_URL)
+socketio = SocketIO(message_queue=Config.CELERY_BROKER_URL, transports=['polling'])
 
 class SocketIOHandler(logging.Handler):
     def emit(self, record):
