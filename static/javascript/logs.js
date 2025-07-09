@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLogFilter = null; // 'task' or 'server'
 
     // --- WebSocket Connection ---
-    const socket = io();
+    const socket = io({ transports: ['polling'] });
 
     socket.on('connect', () => {
         console.log('Connected to server via WebSocket.');
