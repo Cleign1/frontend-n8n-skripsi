@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Task Management</title>
+    <title>Manajemen Tugas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
 </head>
@@ -20,8 +20,8 @@
             
             <!-- Page Header -->
             <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Task Management</h1>
-                <p class="text-gray-600">Kelola dan monitor semua task Celery yang sedang berjalan</p>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Manajemen Tugas</h1>
+                <p class="text-gray-600">Kelola dan monitor semua tugas Celery yang sedang berjalan</p>
             </div>
 
             <!-- Control Buttons -->
@@ -30,14 +30,14 @@
                     <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
-                    Refresh
+                    Muat Ulang
                 </button>
                 
                 <button id="clear-completed-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
                     <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
-                    Clear Completed
+                    Hapus Selesai
                 </button>
             </div>
 
@@ -77,10 +77,10 @@
             <!-- Modal Footer -->
             <div class="p-6 border-t border-gray-200 bg-gray-50 flex gap-3 justify-end">
                 <button id="modal-terminate-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
-                    Terminate Task
+                    Hentikan Tugas
                 </button>
                 <button id="modal-remove-btn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
-                    Remove from List
+                    Hapus dari Daftar
                 </button>
             </div>
         </div>
