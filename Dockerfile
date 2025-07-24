@@ -20,15 +20,17 @@ ADD https://astral.sh/uv/install.sh /uv-installer.sh
 RUN sh /uv-installer.sh && rm /uv-installer.sh
 
 # Ensure the installed binary is on the `PATH`
-ENV PATH="/root/.local/bin/:$PATH"
+ENV PATH=/root/.local/bin:$PATH
 
+# Create a virtual environment at /app/.venv
 RUN uv venv
 
+# Copy requirements and install dependencies into the venv.
+# uv will automatically detect and use the virtual environment in the workdir.
 COPY requirements.txt .
+RUN uv pip install --no-cache -r requirements.txt
 
-RUN uv pip install -r requirements.txt
-
-COPY . .
+COPY . /app/
 
 EXPOSE 5000
 
