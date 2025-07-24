@@ -62,8 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLogFilter = null; // Stop listening
     };
 
-    showTaskLogsBtn.addEventListener('click', () => openModal('task', 'Live Celery Worker Logs'));
-    showServerLogsBtn.addEventListener('click', () => openModal('server', 'Live Flask Server Logs'));
+    showTaskLogsBtn.addEventListener('click', () => openModal('task', 'Log Pekerja Celery Secara Langsung'));
+    showServerLogsBtn.addEventListener('click', () => openModal('server', 'Log Server Flask Secara Langsung'));
     closeLogModalBtn.addEventListener('click', closeModal);
     logModal.addEventListener('click', (event) => {
         if (event.target === logModal) {
