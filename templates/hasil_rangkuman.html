@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analysis Result for {{ task_id }}</title>
+    <title>Laporan Analisis {{ task_id }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
 </head>
@@ -13,17 +13,17 @@
 
     <main class="flex-grow py-12 px-4 sm:px-6 lg:px-8">
         <div class="w-full max-w-6xl mx-auto">
-            <a href="{{ url_for('summary.rangkuman') }}" class="text-blue-600 hover:underline mb-6 inline-block">&larr; Back to Analysis History</a>
+            <a href="{{ url_for('summary.rangkuman') }}" class="text-blue-600 hover:underline mb-6 inline-block">&larr; Kembali ke Riwayat Analisis</a>
 
             <div class="bg-white p-8 rounded-lg shadow-md">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Analysis Report</h1>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Laporan Analisis</h1>
                 <p class="text-sm text-gray-500 mb-8">
                     Task ID: <code class="bg-gray-200 text-gray-700 rounded px-1">{{ task_id }}</code>
                 </p>
 
                 {% if result and result.top_5_understocked %}
                 <div class="mb-8">
-                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Top 5 Understocked Products</h2>
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Top 5 Produk yang Kekurangan Stok</h2>
                     <div class="space-y-6">
                         {% for item in result.top_5_understocked %}
                         <div>
@@ -42,8 +42,8 @@
                             </div>
 
                             <div class="flex justify-between text-sm mt-1">
-                                <span class="font-medium text-red-600">Current Stock: {{ item.stock }}</span>
-                                <span class="font-medium text-gray-600">Predicted Need: {{ item.predicted }}</span>
+                                <span class="font-medium text-red-600">Stok Saat Ini: {{ item.stock }}</span>
+                                <span class="font-medium text-gray-600">Kebutuhan yang Diprediksi: {{ item.predicted }}</span>
                             </div>
                         </div>
                         {% endfor %}
@@ -51,8 +51,7 @@
                 </div>
                 {% endif %}
 
-
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Full Report from Google Drive</h2>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Laporan Lengkap dari Google Drive</h2>
                 {% if csv_rows %}
                     <div class="overflow-y-auto border border-gray-200 rounded-lg h-[70vh]">
                         <table class="min-w-full divide-y divide-gray-200 table-fixed">
@@ -82,8 +81,8 @@
                     </div>
                 {% else %}
                     <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
-                        <p class="font-bold">Report Content Not Available or Empty</p>
-                        <p>{{ file_content_error or "The report file could not be downloaded, was empty, or is not in a valid CSV format." }}</p>
+                        <p class="font-bold">Konten Laporan Tidak Tersedia atau Kosong</p>
+                        <p>{{ file_content_error or "File laporan tidak dapat diunduh, kosong, atau tidak dalam format CSV yang valid." }}</p>
                     </div>
                 {% endif %}
             </div>
