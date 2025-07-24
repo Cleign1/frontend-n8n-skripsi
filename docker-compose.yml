@@ -18,24 +18,14 @@ services:
     depends_on:
       - redis # Ensures redis starts before the app
     volumes:
-      - app:/app
+      - .:/app # Mounts the project directory directly into the container
+      - /app/.venv
     restart: always
     env_file: .env
     environment:
       - TZ=Asia/Jakarta
     networks:
       - fe-n8n-network
-    develop:
-      watch:
-        - action: sync
-          path: ./
-          target: /app
-          ignore:
-            - .git/
-            - .idea/
-            - __pycache__/
-        - action: rebuild
-          path: requirements.txt
 
   # Service 3: The Celery Worker
   worker:
@@ -46,7 +36,8 @@ services:
     depends_on:
       - redis # Ensures redis starts before the worker
     volumes:
-      - app:/app
+      - .:/app # Mounts the project directory directly into the container
+      - /app/.venv
     restart: always
     env_file: .env
     environment:
@@ -54,20 +45,6 @@ services:
       - TZ=Asia/Jakarta
     networks:
       - fe-n8n-network
-    develop:
-      watch:
-        - action: sync
-          path: ./
-          target: /app
-          ignore:
-            - .git/
-            - .idea/
-            - __pycache__/
-        - action: rebuild
-          path: requirements.txt
-
-volumes:
-  app:
 
 networks:
   fe-n8n-network:
