@@ -18,29 +18,29 @@
         <div class="w-full max-w-6xl mx-auto">
 
             <div class="bg-white p-6 rounded-lg shadow-md mb-10">
-                 <h1 class="text-2xl font-bold text-gray-800 mb-4">Run New Inventory Analysis</h1>
-                 <p class="text-gray-600 mb-6">Click the button below to trigger the n8n workflow. The system will then wait for the analysis results to be sent back.</p>
+                 <h1 class="text-2xl font-bold text-gray-800 mb-4">Jalankan Analisis Inventaris Baru</h1>
+                 <p class="text-gray-600 mb-6">Klik tombol di bawah untuk memicu tugas. Sistem akan menunggu hasil analisis untuk dikirim kembali.</p>
                  <button
                     id="start-summary-btn"
                     class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                     data-start-url="{{ url_for('summary.start_summary') }}"
                     data-tasks-url="{{ url_for('tasks_ui.tasks') }}">
-                    Start Analysis Process
+                    Mulai Proses Analisis
                 </button>
                  <div id="notification-area" class="mt-6 font-medium"></div>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-md">
-                 <h2 class="text-2xl font-bold text-gray-800 mb-4">Analysis History</h2>
+                 <h2 class="text-2xl font-bold text-gray-800 mb-4">Riwayat Analisis</h2>
                  <div class="overflow-x-auto">
                      <table class="min-w-full divide-y divide-gray-200">
                          <thead class="bg-gray-50">
                              <tr>
                                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task ID</th>
-                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Insufficient Stock</th>
-                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zero Stock</th>
-                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Daily Sales</th>
-                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report</th>
+                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok Tidak Cukup</th>
+                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok Nol</th>
+                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rata-rata Penjualan Harian</th>
+                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Laporan</th>
                              </tr>
                          </thead>
                          <tbody class="bg-white divide-y divide-gray-200">
@@ -54,7 +54,7 @@
                                  </tr>
                              {% else %}
                                  <tr>
-                                     <td colspan="5" class="text-center text-gray-500 py-6">No analysis has been run yet.</td>
+                                     <td colspan="5" class="text-center text-gray-500 py-6">Tidak ada analisis yang telah dijalankan.</td>
                                  </tr>
                              {% endfor %}
                          </tbody>
