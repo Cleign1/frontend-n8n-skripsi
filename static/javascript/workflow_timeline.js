@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Get the unique task ID from the data attribute on the body
     const taskId = document.body.dataset.taskId;
     const connectionStatus = document.getElementById('connection-status');
+    const backButton = document.getElementById('back-to-tasks');
     
     if (!taskId) {
         console.error("Task ID is missing from the page.");
@@ -11,6 +12,13 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
         connectionStatus.className = 'mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-sm';
         return;
+    }
+    
+    // --- Back Button Logic ---
+    if (backButton) {
+        backButton.addEventListener('click', () => {
+            window.location.href = '/tasks';
+        });
     }
 
     /**
@@ -64,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const iconContainer = stepElement.querySelector('.timeline-icon-container');
         const titleElement = stepElement.querySelector('.timeline-title');
-        const statusMessage = stepElement.querySelector('.status-message');
+        const statusMessageDiv = stepElement.querySelector('.status-message');
         
         const styles = statusStyles[status] || statusStyles.pending;
 
@@ -82,7 +90,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (icons[status]) {
             iconContainer.innerHTML = icons[status];
         }
-        statusMessage.textContent = message || (status.charAt(0).toUpperCase() + status.slice(1));
+        
+        let finalMessage = message || (status.charAt(0).toUpperCase() + status.slice(1));
+        try {
+            const jsonOutput = JSON.parse(finalMessage.replace(/^Output: /, ''));
+            finalMessage = `<pre class="text-xs bg-gray-100 p-2 rounded-md mt-2 whitespace-pre-wrap max-h-40 overflow-auto">${JSON.stringify(jsonOutput, null, 2)}</pre>`;
+            statusMessageDiv.innerHTML = finalMessage;
+        } catch (e) {
+            statusMessageDiv.innerHTML = `<p>${finalMessage}</p>`;
+        }
     }
     
     // --- WebSocket Connection Setup ---
@@ -96,6 +112,14 @@ document.addEventListener('DOMContentLoaded', function () {
             <p>Menunggu pembaruan status real-time.</p>
         `;
         socket.emit('join', { room: taskId });
+
+        // --- UPDATED LOGIC ---
+        // By the time this page loads, the webhook has already succeeded.
+        // We now wait for the first real processing step to begin.
+        updateStepStatus('75527304-d9d2-454c-b48a-33cf8bbbd7bb', 'success', 'Pemicu alur kerja diterima.');
+        
+        // Set the "Code" node (Menyiapkan Nama File) to running immediately.
+        updateStepStatus('ad116d81-6e07-4af6-9703-b8154ac73bd7', 'running', 'Memulai proses...');
     });
 
     socket.on('disconnect', () => {
@@ -115,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
             updateStepStatus('workflow_finish', 'fail', 'Workflow gagal pada salah satu langkah.');
         }
         
-        if (data.step_id === 'db9ca7f7-135d-4392-bf0a-36f1f688eb39' && data.status === 'success') {
+        if (data.step_id === '895ff878-867f-48e4-9acf-421d48401ec1' && data.status === 'success') {
             updateStepStatus('workflow_finish', 'success', 'Semua langkah berhasil diselesaikan.');
         }
     });
