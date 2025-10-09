@@ -1,5 +1,5 @@
 # blueprints/api/routes.py
-import os
+import uuid
 import json
 import datetime
 import requests
@@ -211,3 +211,56 @@ def save_summary_result():
         return jsonify({"error": "Could not connect to Redis", "details": str(e)}), 500
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred", "details": str(e)}), 500
+
+@api_bp.route('/workflow/start', methods=['POST'])
+def start_workflow():
+    """
+    Starts the n8n stock update workflow.
+    1. Creates a unique task ID.
+    2. Stores the task in Redis.
+    3. Triggers the n8n webhook, passing the new task ID and callback URL.
+    4. Returns the task ID to the client for redirection.
+    """
+    data = request.get_json()
+    if not data or 'date' not in data:
+        return jsonify({"error": "Invalid request, 'date' is required"}), 400
+    
+    n8n_webhook_url = current_app.config.get("N8N_WEBHOOK_URL")
+    if not n8n_webhook_url:
+        return jsonify({"error": "The N8N_WEBHOOK_URL environment variable is not set in the backend."}), 500
+    
+    task_id = f'workflow_{uuid.uuid4()}'
+    date_str = data.get('date')
+    
+    # create user friendly task name untuk halaman task
+    task_name = f'Update Stok Harian - {date_str}'
+    
+    # Store initial information about this task di redis
+    store_task_info(
+        task_id,
+        task_name,
+        f'daily_sales_{date_str}.csv',
+        datetime.datetime.now().isoformat(),
+        status="Dimulai",
+        last_message='Task dibuat, proses segra dimulai.'
+    )
+    
+    n8n_payload = [{
+        'date': date_str,
+        'flask_task_id': task_id,
+        'flask_webhook_url': f'{os.getenv("INTERNAL_API_BASE_URL", "http://localhost:5000")}/api/workflow/update'
+    }]
+    
+    try:
+        response = requests.post(n8n_webhook_url, json=n8n_payload, timeout=10)
+        response.raise_for_status()
+        
+        return jsonify({"message":"Workflow dimulai", "task_id": task_id}), 202
+
+    except requests.exceptions.RequestException as e:
+        # If triggering n8n fails, we update the task status to FAILURE
+        redis_conn = current_app.redis_conn
+        if redis_conn:
+            redis_conn.hset(f"task:{task_id}", "status", "FAILURE")
+            redis_conn.hset(f"task:{task_id}", "last_message", f"Gagal memicu n8n: {e}")
+        return jsonify({"error": f"Failed to trigger n8n workflow: {e}"}), 500
