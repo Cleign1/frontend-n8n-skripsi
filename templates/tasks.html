@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Manajemen Tugas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
 </head>
 
@@ -45,6 +45,21 @@
             <div id="tasks-container" class="space-y-4">
                 <!-- Tasks will be populated here -->
             </div>
+
+            <!-- Info Box -->
+            <!-- <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                <h4 class="font-semibold text-blue-800">Tugas Update Stok</h4>
+                <p class="text-sm text-blue-700 mt-1">
+                    Tugas pembaruan stok harian yang dimulai dari halaman "Update Stok" memiliki visualisasi proses waktu nyata. Klik 'Lihat Proses' untuk melihatnya secara langsung.
+                </p>
+            </div>
+            <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                <h4 class="font-semibold text-blue-800">Tugas Prediksi Stok</h4>
+                <p class="text-sm text-blue-700 mt-1">
+                    Tugas prediksi stok harian yang dimulai dari halaman "Obrolan Agen AI" dan halaman "Prediksi Stok" memiliki visualisasi proses waktu nyata. Klik 'Lihat Proses' untuk melihatnya secara langsung.
+                </p>
+            </div> -->
+            
 
             <!-- Empty State -->
             <div id="empty-state" class="text-center py-12 hidden">
