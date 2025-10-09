@@ -61,42 +61,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (startUpdateBtn) {
         startUpdateBtn.addEventListener('click', async function() {
-            const formattedDate = getFormattedDate();
-            if (!formattedDate) return;
+            const selectedDate = datePicker.value;
+            if (!selectedDate) {
+                alert("Pilih tanggal terlebih dahulu!");
+                return;
+            }
 
-            const webhookUrl = 'https://n8n.ibnukhaidar.live/webhook/workflow-1-webhook';
-            const body = [{ date: formattedDate }];
+            // Disable button to prevent multiple clicks while processing
+            startUpdateBtn.disabled = true;
+            startUpdateBtn.textContent = 'Memulai...';
 
             try {
-                const response = await fetch(webhookUrl, {
+                // Call our own backend to safely start the workflow
+                const response = await fetch('/api/workflow/start', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify({ date: selectedDate })
                 });
 
+                const result = await response.json();
+
                 if (response.ok) {
-                    const statusMessage = `Proses update stok untuk tanggal ${formattedDate} telah berhasil dimulai.`;
-                    alert(statusMessage);
-
-                    // Update the app status via API
-                    try {
-                        await fetch('/api/status', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ status: statusMessage })
-                        });
-                    } catch (statusError) {
-                        console.error('Failed to update app status:', statusError);
-                    }
-
+                    // On success, the backend gives us a task_id. Redirect to the timeline page.
+                    window.location.href = `/workflow/${result.task_id}`;
                 } else {
-                    const errorResult = await response.json();
-                    throw new Error(errorResult.message || `HTTP error! status: ${response.status}`);
+                    // If the backend failed to start the task, show the error
+                    throw new Error(result.error || `HTTP error! status: ${response.status}`);
                 }
             } catch (error) {
                 alert('Error: Gagal memulai proses update stok. ' + error.message);
+                // Re-enable the button on failure
+                startUpdateBtn.disabled = false;
+                startUpdateBtn.textContent = 'Mulai Update Stok';
             }
         });
     }
