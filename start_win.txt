@@ -1,0 +1,3 @@
+uv run flask --app run.py run --debug --host=0.0.0.0
+
+uv run celery -A make_celery.celery worker --loglevel=info --pool=solo -n worker1@%h
