@@ -4,12 +4,12 @@ import json
 import datetime
 import requests
 import redis
+import os
 from flask import Blueprint, jsonify, request, current_app
 from .utils import update_app_status_via_api, current_app_status
 from ..tasks.utils import get_all_tasks, remove_task_from_list, store_task_info
 from ..main.tasks import process_csv_in_batches  # Import the task
 from celery_app import celery
-import os
 from celery.contrib.abortable import AbortableAsyncResult
 
 api_bp = Blueprint('api', __name__)
@@ -215,39 +215,44 @@ def save_summary_result():
 @api_bp.route('/workflow/start', methods=['POST'])
 def start_workflow():
     """
-    Starts the n8n stock update workflow.
-    1. Creates a unique task ID.
-    2. Stores the task in Redis.
-    3. Triggers the n8n webhook, passing the new task ID and callback URL.
-    4. Returns the task ID to the client for redirection.
+    Starts an n8n workflow. This is now generic and requires a 'workflow_type'.
     """
     data = request.get_json()
-    if not data or 'date' not in data:
-        return jsonify({"error": "Invalid request, 'date' is required"}), 400
-    
+    workflow_type = data.get('workflow_type', 'update') # Default to 'update'
+    date_str = data.get('date')
+
+    if workflow_type == 'update' and not date_str:
+        return jsonify({"error": "Invalid request, 'date' is required for 'update' workflow"}), 400
+
+    # --- FIX: Use .get() for safer access and provide a clear error ---
+    workflows_config = current_app.config.get('WORKFLOWS')
+    if not workflows_config:
+        # This error message confirms the problem is the config not being loaded.
+        return jsonify({"error": "WORKFLOWS definition not found in the application's configuration. Please check your config.py file and restart the server."}), 500
+
     n8n_webhook_url = current_app.config.get("N8N_WEBHOOK_URL")
     if not n8n_webhook_url:
-        return jsonify({"error": "The N8N_WEBHOOK_URL environment variable is not set in the backend."}), 500
+        return jsonify({"error": "The N8N_WEBHOOK_URL environment variable is not set."}), 500
     
     task_id = f'workflow_{uuid.uuid4()}'
-    date_str = data.get('date')
     
-    # create user friendly task name untuk halaman task
-    task_name = f'Update Stok Harian - {date_str}'
-    
-    # Store initial information about this task di redis
+    # Safely get the workflow title
+    workflow_title = workflows_config.get(workflow_type, {}).get('title', 'Unknown Workflow')
+    task_name = f'{workflow_title} - {datetime.datetime.now().strftime("%Y-%m-%d")}'
+
     store_task_info(
         task_id,
         task_name,
-        f'daily_sales_{date_str}.csv',
+        f'daily_sales_{date_str}.csv' if date_str else 'N/A',
         datetime.datetime.now().isoformat(),
         status="Dimulai",
-        last_message='Task dibuat, proses segra dimulai.'
+        last_message='Task dibuat, proses akan segera dimulai.'
     )
     
     n8n_payload = [{
         'date': date_str,
         'flask_task_id': task_id,
+        'workflow_type': workflow_type,
         'flask_webhook_url': f'{os.getenv("INTERNAL_API_BASE_URL", "http://localhost:5000")}/api/workflow/update'
     }]
     
@@ -255,10 +260,13 @@ def start_workflow():
         response = requests.post(n8n_webhook_url, json=n8n_payload, timeout=10)
         response.raise_for_status()
         
-        return jsonify({"message":"Workflow dimulai", "task_id": task_id}), 202
+        return jsonify({
+            "message": f"Workflow '{workflow_type}' dimulai", 
+            "task_id": task_id,
+            "workflow_type": workflow_type
+        }), 202
 
     except requests.exceptions.RequestException as e:
-        # If triggering n8n fails, we update the task status to FAILURE
         redis_conn = current_app.redis_conn
         if redis_conn:
             redis_conn.hset(f"task:{task_id}", "status", "FAILURE")
