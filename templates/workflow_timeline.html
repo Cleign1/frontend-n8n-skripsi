@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workflow Process Timeline</title>
+    <title>{{ workflow_title }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
 </head>
-<!-- The task_id is passed to a data attribute for easy access in JavaScript -->
 <body class="min-h-screen bg-gray-50 flex flex-col text-gray-800" data-task-id="{{ task_id }}">
 
     {% include "components/header.html" %}
@@ -16,7 +15,6 @@
     <main class="flex-grow container mx-auto px-4 py-8">
         <div class="max-w-3xl mx-auto">
             
-            <!-- Back Button and Header -->
             <div class="flex items-center justify-between mb-8">
                 <button id="back-to-tasks" class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -27,7 +25,7 @@
             </div>
 
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900">Proses Update Stok</h1>
+                <h1 class="text-3xl font-bold text-gray-900">{{ workflow_title }}</h1>
                 <p class="text-gray-600 mt-2">Memonitor alur kerja n8n secara real-time. Status akan diperbarui secara otomatis.</p>
                 <p class="text-sm mt-2 font-mono bg-gray-100 p-2 rounded inline-block">Task ID: <span id="task-id-display">{{ task_id }}</span></p>
             </div>
@@ -37,91 +35,29 @@
                 <p>Menunggu pembaruan status real-time.</p>
             </div>
 
-            <!-- Timeline Container -->
             <div class="relative m-8">
-                <!-- Vertical line -->
                 <div class="absolute left-8 top-0 bottom-0 w-1 bg-gray-200" style="transform: translateX(-50%);"></div>
 
-                <!-- Step 1: Webhook Trigger -->
-                <div class="timeline-step relative flex items-start mb-10" data-step-id="75527304-d9d2-454c-b48a-33cf8bbbd7bb">
+                {% for step in steps %}
+                <div class="timeline-step relative flex items-start mb-10" data-step-id="{{ step.id }}">
                     <div class="timeline-icon-container relative z-10 flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full border-4 bg-gray-50 transition-all duration-300 ease-in-out border-gray-300 text-gray-500">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                     <div class="ml-6 pt-3">
-                        <h3 class="timeline-title text-lg font-semibold text-gray-500 transition-colors duration-300">Menerima Panggilan Webhook</h3>
-                        <p class="text-gray-600">Alur kerja dipicu oleh permintaan eksternal.</p>
+                        <h3 class="timeline-title text-lg font-semibold text-gray-500 transition-colors duration-300">{{ step.title }}</h3>
+                        <p class="text-gray-600">{{ step.description }}</p>
                         <div class="status-message mt-2 text-sm italic text-gray-600 min-h-[1.25rem]">Menunggu...</div>
                     </div>
                 </div>
+                {% endfor %}
 
-                <!-- Step 2: Generate File Name -->
-                <div class="timeline-step relative flex items-start mb-10" data-step-id="ad116d81-6e07-4af6-9703-b8154ac73bd7">
-                    <div class="timeline-icon-container relative z-10 flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full border-4 bg-gray-50 transition-all duration-300 ease-in-out border-gray-300 text-gray-500">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div class="ml-6 pt-3">
-                        <h3 class="timeline-title text-lg font-semibold text-gray-500 transition-colors duration-300">Menyiapkan Nama File</h3>
-                        <p class="text-gray-600">Menyiapkan nama file berdasarkan tanggal yang diberikan.</p>
-                        <div class="status-message mt-2 text-sm italic text-gray-600 min-h-[1.25rem]">Menunggu...</div>
-                    </div>
-                </div>
-
-                <!-- Step 3: Download File -->
-                <div class="timeline-step relative flex items-start mb-10" data-step-id="03bec1d0-2fd7-4786-b2ee-d460c4c4fe55">
-                    <div class="timeline-icon-container relative z-10 flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full border-4 bg-gray-50 transition-all duration-300 ease-in-out border-gray-300 text-gray-500">
-                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div class="ml-6 pt-3">
-                        <h3 class="timeline-title text-lg font-semibold text-gray-500 transition-colors duration-300">Unduh File dari S3</h3>
-                        <p class="text-gray-600">Mengunduh file penjualan harian dari bucket S3.</p>
-                        <div class="status-message mt-2 text-sm italic text-gray-600 min-h-[1.25rem]">Menunggu...</div>
-                    </div>
-                </div>
-
-                <!-- Step 4: Extract Data from CSV -->
-                <div class="timeline-step relative flex items-start mb-10" data-step-id="c27e7ea6-aba2-49f8-8358-da3762619e57">
-                    <div class="timeline-icon-container relative z-10 flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full border-4 bg-gray-50 transition-all duration-300 ease-in-out border-gray-300 text-gray-500">
-                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div class="ml-6 pt-3">
-                        <h3 class="timeline-title text-lg font-semibold text-gray-500 transition-colors duration-300">Ekstrak Data dari File</h3>
-                        <p class="text-gray-600">Membaca dan mem-parsing data dari file CSV yang telah diunduh.</p>
-                        <div class="status-message mt-2 text-sm italic text-gray-600 min-h-[1.25rem]">Menunggu...</div>
-                    </div>
-                </div>
-
-                <!-- Step 5: Prepare SQL Query -->
-                <div class="timeline-step relative flex items-start mb-10" data-step-id="c4769db6-db16-4bd2-9d4f-324944759aea">
-                    <div class="timeline-icon-container relative z-10 flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full border-4 bg-gray-50 transition-all duration-300 ease-in-out border-gray-300 text-gray-500">
-                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div class="ml-6 pt-3">
-                        <h3 class="timeline-title text-lg font-semibold text-gray-500 transition-colors duration-300">Siapkan Kueri Pembaruan Massal</h3>
-                        <p class="text-gray-600">Membuat satu kueri SQL `UPDATE` untuk memperbarui semua stok produk sekaligus.</p>
-                        <div class="status-message mt-2 text-sm italic text-gray-600 min-h-[1.25rem]">Menunggu...</div>
-                    </div>
-                </div>
-
-                <!-- Step 6: Execute SQL Query -->
-                <div class="timeline-step relative flex items-start mb-10" data-step-id="895ff878-867f-48e4-9acf-421d48401ec1">
-                    <div class="timeline-icon-container relative z-10 flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full border-4 bg-gray-50 transition-all duration-300 ease-in-out border-gray-300 text-gray-500">
-                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div class="ml-6 pt-3">
-                        <h3 class="timeline-title text-lg font-semibold text-gray-500 transition-colors duration-300">Jalankan Kueri SQL</h3>
-                        <p class="text-gray-600">Menjalankan kueri pada database PostgreSQL untuk memperbarui inventaris.</p>
-                        <div class="status-message mt-2 text-sm italic text-gray-600 min-h-[1.25rem]">Menunggu...</div>
-                    </div>
-                </div>
-
-                <!-- Step 7: Workflow Finished -->
                 <div class="timeline-step relative flex items-start" data-step-id="workflow_finish">
                     <div class="timeline-icon-container relative z-10 flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full border-4 bg-gray-50 transition-all duration-300 ease-in-out border-gray-300 text-gray-500">
-                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                     <div class="ml-6 pt-3">
                         <h3 class="timeline-title text-lg font-semibold text-gray-500 transition-colors duration-300">Selesai</h3>
-                        <p class="text-gray-600">Proses update stok telah selesai.</p>
+                        <p class="text-gray-600">Proses telah selesai.</p>
                         <div class="status-message mt-2 text-sm italic text-gray-600 min-h-[1.25rem]">Menunggu penyelesaian...</div>
                     </div>
                 </div>
@@ -132,8 +68,9 @@
 
     {% include "components/footer.html" %}
 
-    <!-- Link to the external JavaScript file -->
+    <script>
+        const initialWorkflowState = {{ workflow_state | tojson }};
+    </script>
     <script src="{{ url_for('static', filename='javascript/workflow_timeline.js') }}"></script>
 </body>
 </html>
-
