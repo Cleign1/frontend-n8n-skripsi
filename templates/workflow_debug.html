@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow API Debugger</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
+</head>
+<body class="min-h-screen bg-gray-900 text-gray-200 flex flex-col font-mono">
+
+    {% include "components/header.html" %}
+
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-yellow-400 mb-2">Workflow API Debugger</h1>
+            <p class="text-gray-400 mb-6">This page listens for incoming requests to the `/api/workflow/update` endpoint in real-time.</p>
+
+            <div class="flex items-center gap-4 mb-6">
+                <div class="flex items-center gap-2">
+                    <div id="socket-status-indicator" class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+                    <span id="socket-status-text" class="text-sm font-medium">Connecting...</span>
+                </div>
+                <button id="clear-log-btn" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-md text-sm">Clear Log</button>
+            </div>
+            
+            <div id="log-container" class="bg-black p-4 rounded-lg shadow-inner h-[70vh] overflow-y-auto space-y-4">
+                <div class="text-gray-500 italic">Waiting for the first request from n8n...</div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const logContainer = document.getElementById('log-container');
+            const socketStatusIndicator = document.getElementById('socket-status-indicator');
+            const socketStatusText = document.getElementById('socket-status-text');
+            const clearLogBtn = document.getElementById('clear-log-btn');
+
+            const socket = io();
+
+            socket.on('connect', () => {
+                console.log('Successfully connected to WebSocket server.');
+                socketStatusIndicator.classList.remove('bg-red-500', 'animate-pulse');
+                socketStatusIndicator.classList.add('bg-green-500');
+                socketStatusText.textContent = 'Connected';
+            });
+
+            socket.on('disconnect', () => {
+                console.error('Disconnected from WebSocket server.');
+                socketStatusIndicator.classList.remove('bg-green-500');
+                socketStatusIndicator.classList.add('bg-red-500', 'animate-pulse');
+                socketStatusText.textContent = 'Disconnected';
+            });
+
+            // Listen for the new debug event
+            socket.on('workflow_debug_update', (data) => {
+                console.log('Received debug data:', data);
+
+                // Clear the initial "waiting" message
+                if (logContainer.querySelector('.italic')) {
+                    logContainer.innerHTML = '';
+                }
+
+                const logEntry = document.createElement('div');
+                logEntry.className = 'p-4 bg-gray-800 rounded border border-gray-700';
+
+                const timestamp = new Date().toLocaleTimeString('id-ID');
+
+                logEntry.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-cyan-400">Request Received</span>
+                        <span class="text-xs text-gray-400">${timestamp}</span>
+                    </div>
+                    <pre class="text-sm whitespace-pre-wrap overflow-x-auto">${JSON.stringify(data, null, 2)}</pre>
+                `;
+
+                // Prepend to show the newest first
+                logContainer.prepend(logEntry);
+            });
+
+            clearLogBtn.addEventListener('click', () => {
+                logContainer.innerHTML = '<div class="text-gray-500 italic">Log cleared. Waiting for new requests...</div>';
+            });
+        });
+    </script>
+</body>
+</html>
