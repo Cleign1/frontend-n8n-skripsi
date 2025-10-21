@@ -7,9 +7,9 @@ dalam aplikasi inventory.
 
 ## Real Code Stuff
 
-- [ ] Work the update workflow to update status to timeline
-- [ ] add the workflow step id to the env
-- [ ] map automatically the step id into the update stock timeline page
+- [x] Work the update workflow to update status to timeline
+- [x] add the workflow step id to the env
+- [x] map automatically the step id into the update stock timeline page
 - [ ] make a predict stock timeline page
 - [ ] do the same above for dynamic stuff
 - [ ] make a report timeline page
