@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, jsonify, current_app, abort
 from app import socketio
 from ..tasks.utils import store_task_info
+from ..api.utils import update_app_status_via_api
 import datetime
 import json
 
@@ -54,6 +55,7 @@ def workflow_webhook():
     if not all([task_id, step_id, status, workflow_type]):
         return jsonify({"error": "Missing required fields: task_id, step_id, status, workflow_type"}), 400
     
+    
     redis_conn = current_app.redis_conn
     if redis_conn:
         step_state = {'status': status, 'message': message}
@@ -68,15 +70,42 @@ def workflow_webhook():
         'message': message,
         'workflow_type': workflow_type,
     }, room=task_id)
+    
+    socketio.emit('status_update', data, room=task_id)
 
     workflow_definition = current_app.config['WORKFLOWS'].get(workflow_type)
     if workflow_definition:
         final_step_id = workflow_definition['steps'][-1]['id']
-        if status == 'fail' or (step_id == final_step_id and status == "success"):
-            final_status = "FAILURE" if status == 'fail' else "SUCCESS"
+        
+        final_workflow_status = None 
+        final_workflow_message = ""
+        global_status_message = "" # For the footer
+
+        if status == 'fail':
+            final_workflow_status = 'fail'
+            final_workflow_message = f"Workflow gagal pada langkah: {step_id}. Pesan: {message}"
+            # --- SET GLOBAL STATUS MESSAGE FOR FOOTER ---
+            global_status_message = f"❌ Workflow '{workflow_type}' Gagal ({task_id})"
+        elif step_id == final_step_id and status == "success":
+            final_workflow_status = 'success'
+            final_workflow_message = "Semua langkah berhasil diselesaikan."
+             # --- SET GLOBAL STATUS MESSAGE FOR FOOTER ---
+            global_status_message = f"✅ Workflow '{workflow_type}' Selesai ({task_id})"
+
+        if final_workflow_status: 
+            redis_conn = current_app.redis_conn
             if redis_conn:
-                 redis_conn.hset(f"task:{task_id}", "status", final_status)
-                 redis_conn.hset(f"task:{task_id}", "last_message", message)
+                # Save workflow_finish state
+                finish_step_state = {'status': final_workflow_status, 'message': final_workflow_message}
+                redis_conn.hset(f'workflow_state:{task_id}', 'workflow_finish', json.dumps(finish_step_state))
+                # Update main task status
+                redis_conn.hset(f"task:{task_id}", "status", "SUCCESS" if final_workflow_status == 'success' else "FAILURE")
+                redis_conn.hset(f"task:{task_id}", "last_message", final_workflow_message)
+            
+            # --- FIX IS HERE: UPDATE GLOBAL STATUS ---
+            if global_status_message:
+                update_app_status_via_api(global_status_message)
+            # --- END FIX ---
 
     return jsonify({"status": "received"}), 200
 
