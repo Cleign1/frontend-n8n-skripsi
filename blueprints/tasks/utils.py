@@ -1,6 +1,7 @@
 # blueprints/tasks/utils.py
 from flask import current_app
 from celery_app import celery
+import json
 
 
 def get_all_tasks():
@@ -17,22 +18,25 @@ def get_all_tasks():
         if not task_info:
             continue
 
-        if task_id.startswith('prediksi_'):
+        if task_id.startswith('prediksi_') or task_id.startswith('workflow_'):
+            # Check if there's a definitive final state saved for workflows
+            if task_id.startswith('workflow_'):
+                finish_state_json = redis_conn.hget(f"workflow_state:{task_id}", "workflow_finish")
+                if finish_state_json:
+                    try:
+                        finish_state = json.loads(finish_state_json)
+                        # Use the status from workflow_finish if it's success or fail
+                        if finish_state.get('status') in ['success', 'fail']:
+                             # Map 'success'/'fail' from workflow state to 'SUCCESS'/'FAILURE' for consistency
+                            task_info['status'] = "SUCCESS" if finish_state['status'] == 'success' else "FAILURE"
+                            task_info['last_message'] = finish_state.get('message', task_info.get('last_message'))
+                    except json.JSONDecodeError:
+                        print(f"Warning: Could not decode workflow_finish JSON for task {task_id}")
+                        # Keep the status already present in task_info if decoding fails
+
+            # Append the potentially updated task_info
             tasks.append(task_info)
             continue
-
-        try:
-            celery_task = celery.AsyncResult(task_id)
-            current_celery_status = celery_task.status
-            if task_info.get('status') != current_celery_status:
-                redis_conn.hset(f"task:{task_id}", "status", current_celery_status)
-            task_info['status'] = current_celery_status
-            task_info['result'] = str(celery_task.result) if celery_task.result else None
-            tasks.append(task_info)
-        except Exception as e:
-            print(f"Error getting task status for {task_id}: {e}")
-            task_info['status'] = 'UNKNOWN'
-            tasks.append(task_info)
 
     return tasks
 
