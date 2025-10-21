@@ -6,7 +6,7 @@ import requests
 import redis
 import os
 from flask import Blueprint, jsonify, request, current_app
-from .utils import update_app_status_via_api, current_app_status
+from .utils import update_app_status_via_api, get_current_app_status
 from ..tasks.utils import get_all_tasks, remove_task_from_list, store_task_info
 from ..main.tasks import process_csv_in_batches  # Import the task
 from celery_app import celery
@@ -59,16 +59,20 @@ def predict_stok():
 
 @api_bp.route('/status', methods=['GET', 'POST'])
 def status_endpoint():
-    global current_app_status
+    # Remove 'global current_app_status'
     if request.method == 'POST':
+        # POST is now primarily handled by update_app_status_via_api
+        # But we keep this for direct external updates if needed
         data = request.get_json()
         if not data or 'status' not in data:
             return jsonify({"error": "Data tidak valid"}), 400
-        current_app_status['status'] = data.get('status')
-        current_app_status['last_updated'] = datetime.datetime.now().isoformat()
+        # Call the central update function
+        update_app_status_via_api(data.get('status')) 
         return jsonify({"message": "Status berhasil diperbarui"}), 200
     else:
-        return jsonify(current_app_status)
+        # GET reads the current status from Redis
+        current_status = get_current_app_status() 
+        return jsonify(current_status)
 
 # --- TASK MANAGEMENT API ---
 @api_bp.route('/tasks', methods=['GET'])
@@ -218,35 +222,34 @@ def start_workflow():
     Starts an n8n workflow. This is now generic and requires a 'workflow_type'.
     """
     data = request.get_json()
-    workflow_type = data.get('workflow_type', 'update') # Default to 'update'
+    workflow_type = data.get('workflow_type', 'update')
     date_str = data.get('date')
 
     if workflow_type == 'update' and not date_str:
         return jsonify({"error": "Invalid request, 'date' is required for 'update' workflow"}), 400
 
-    # --- FIX: Use .get() for safer access and provide a clear error ---
     workflows_config = current_app.config.get('WORKFLOWS')
     if not workflows_config:
-        # This error message confirms the problem is the config not being loaded.
-        return jsonify({"error": "WORKFLOWS definition not found in the application's configuration. Please check your config.py file and restart the server."}), 500
+        return jsonify({"error": "WORKFLOWS definition not found in configuration."}), 500
 
     n8n_webhook_url = current_app.config.get("N8N_WEBHOOK_URL")
     if not n8n_webhook_url:
-        return jsonify({"error": "The N8N_WEBHOOK_URL environment variable is not set."}), 500
+        return jsonify({"error": "N8N_WEBHOOK_URL environment variable is not set."}), 500
     
     task_id = f'workflow_{uuid.uuid4()}'
     
-    # Safely get the workflow title
     workflow_title = workflows_config.get(workflow_type, {}).get('title', 'Unknown Workflow')
     task_name = f'{workflow_title} - {datetime.datetime.now().strftime("%Y-%m-%d")}'
 
+    # Store initial task info (status="Dimulai")
     store_task_info(
         task_id,
         task_name,
         f'daily_sales_{date_str}.csv' if date_str else 'N/A',
         datetime.datetime.now().isoformat(),
-        status="Dimulai",
-        last_message='Task dibuat, proses akan segera dimulai.'
+        status="Dimulai", # Keep initial status as "Dimulai" in Redis task details
+        last_message='Task dibuat, proses akan segera dimulai.',
+        workflow_type=workflow_type # Pass workflow_type here
     )
     
     n8n_payload = [{
@@ -257,6 +260,11 @@ def start_workflow():
     }]
     
     try:
+        # --- FIX IS HERE: Update global status BEFORE sending webhook ---
+        update_app_status_via_api(f"🚀 Memulai Workflow '{workflow_type}' ({task_id})")
+        # --- END FIX ---
+        
+        # Trigger n8n
         response = requests.post(n8n_webhook_url, json=n8n_payload, timeout=10)
         response.raise_for_status()
         
@@ -267,8 +275,11 @@ def start_workflow():
         }), 202
 
     except requests.exceptions.RequestException as e:
+        error_message = f"Gagal memicu n8n: {e}"
+        # Update global status to show failure
+        update_app_status_via_api(f"❌ Gagal memulai Workflow '{workflow_type}' ({task_id})")
         redis_conn = current_app.redis_conn
         if redis_conn:
             redis_conn.hset(f"task:{task_id}", "status", "FAILURE")
-            redis_conn.hset(f"task:{task_id}", "last_message", f"Gagal memicu n8n: {e}")
+            redis_conn.hset(f"task:{task_id}", "last_message", error_message)
         return jsonify({"error": f"Failed to trigger n8n workflow: {e}"}), 500
