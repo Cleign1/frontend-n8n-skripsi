@@ -4,68 +4,38 @@ document.addEventListener("DOMContentLoaded", function () {
     const lastUpdated = document.getElementById("last-updated");
 
     if (!footerStatusValue) {
+        console.warn("Footer status elements not found.");
         return;
     }
 
-    /**
-     * Get appropriate Tailwind color classes based on status
-     */
     function getStatusColors(status) {
-        const statusLower = status.toLowerCase();
+        const statusLower = (status || "").toLowerCase(); // Add safety check for undefined status
         
-        if (statusLower.includes('idle') || statusLower.includes('ready')) {
-            return {
-                indicator: 'bg-gray-400',
-                text: 'text-gray-700'
-            };
+        if (statusLower.includes('idle') || statusLower.includes('ready') || statusLower == "") { // Handle empty initial state
+            return { indicator: 'bg-gray-400', text: 'text-gray-700' };
         } else if (statusLower.includes('error') || statusLower.includes('❌') || statusLower.includes('gagal')) {
-            return {
-                indicator: 'bg-red-500',
-                text: 'text-red-700'
-            };
+            return { indicator: 'bg-red-500', text: 'text-red-700' };
         } else if (statusLower.includes('completed') || statusLower.includes('selesai') || statusLower.includes('✅') || statusLower.includes('berhasil')) {
-            return {
-                indicator: 'bg-green-500',
-                text: 'text-green-700'
-            };
+            return { indicator: 'bg-green-500', text: 'text-green-700' };
         } else if (statusLower.includes('processing') || statusLower.includes('sending') || statusLower.includes('🔄') || statusLower.includes('📤') || statusLower.includes('memproses') || statusLower.includes('mengirim')) {
-            return {
-                indicator: 'bg-blue-500',
-                text: 'text-blue-700'
-            };
+            return { indicator: 'bg-blue-500', text: 'text-blue-700' };
         } else if (statusLower.includes('starting') || statusLower.includes('🚀') || statusLower.includes('memulai')) {
-            return {
-                indicator: 'bg-yellow-500',
-                text: 'text-yellow-700'
-            };
+            return { indicator: 'bg-yellow-500', text: 'text-yellow-700' };
         } else if (statusLower.includes('terminated') || statusLower.includes('⏹️') || statusLower.includes('dihentikan')) {
-            return {
-                indicator: 'bg-orange-500',
-                text: 'text-orange-700'
-            };
+            return { indicator: 'bg-orange-500', text: 'text-orange-700' };
         } else {
-            return {
-                indicator: 'bg-gray-400',
-                text: 'text-gray-700'
-            };
+            return { indicator: 'bg-gray-400', text: 'text-gray-700' };
         }
     }
 
-    /**
-     * Update status with proper colors and formatting
-     */
     function updateStatusDisplay(status, timestamp) {
         const colors = getStatusColors(status);
         
-        // Update status text
-        footerStatusValue.textContent = status;
+        footerStatusValue.textContent = status || "Loading..."; // Show Loading... if status is empty initially
         footerStatusValue.className = `text-sm font-medium ${colors.text}`;
         
-        // Update status indicator
         if (statusIndicator) {
             statusIndicator.className = `w-3 h-3 rounded-full ${colors.indicator}`;
-            
-            // Add pulse animation for active states
             if (colors.indicator.includes('blue') || colors.indicator.includes('yellow')) {
                 statusIndicator.classList.add('animate-pulse');
             } else {
@@ -73,35 +43,59 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
         
-        // Update timestamp
         if (lastUpdated && timestamp) {
-            const date = new Date(timestamp);
-            lastUpdated.textContent = date.toLocaleTimeString('id-ID');
+            try {
+                // Ensure timestamp is valid before creating Date object
+                 const date = new Date(timestamp);
+                 if (!isNaN(date)) { // Check if date is valid
+                     lastUpdated.textContent = date.toLocaleTimeString('id-ID');
+                 } else {
+                      lastUpdated.textContent = "--:--:--";
+                 }
+            } catch (e) {
+                console.error("Error parsing timestamp:", timestamp, e);
+                lastUpdated.textContent = "--:--:--";
+            }
+        } else {
+            lastUpdated.textContent = "--:--:--";
         }
     }
 
-    /**
-     * Fetch status from API and update display
-     */
-    async function fetchAndUpdateFooterStatus() {
+    // --- FETCH INITIAL STATUS ON LOAD ---
+    async function fetchInitialFooterStatus() {
         try {
-            const response = await fetch("/api/status");
+            const response = await fetch("/api/status"); // Still fetch once on load
             if (!response.ok) {
-                throw new Error("API server tidak merespon.");
+                throw new Error("API server initial fetch failed.");
             }
             const data = await response.json();
-            
-            updateStatusDisplay(data.status || "Unknown", data.last_updated);
-
+            updateStatusDisplay(data.status, data.last_updated);
         } catch (error) {
-            console.error("Error fetching status for footer:", error);
+            console.error("Error fetching initial status for footer:", error);
             updateStatusDisplay("Connection Error", null);
         }
     }
 
-    // Initial load
-    fetchAndUpdateFooterStatus();
+    // --- SOCKET.IO LISTENER FOR REAL-TIME UPDATES ---
+    const socket = io(); // Connect to Socket.IO
 
-    // Auto-refresh every 3 seconds
-    setInterval(fetchAndUpdateFooterStatus, 3000);
+    socket.on('connect', () => {
+        console.log('Footer connected via WebSocket.');
+        // Fetch initial status once connected
+        fetchInitialFooterStatus(); 
+    });
+
+    socket.on('disconnect', () => {
+        console.error('Footer disconnected from WebSocket.');
+        updateStatusDisplay("Disconnected", null); // Show disconnected status
+    });
+
+    socket.on('global_status_update', (data) => {
+        console.log('Received global status update:', data);
+        updateStatusDisplay(data.status, data.last_updated);
+    });
+
+    // --- REMOVE POLLING ---
+    // The setInterval is no longer needed.
+    // setInterval(fetchAndUpdateFooterStatus, 3000); 
 });
