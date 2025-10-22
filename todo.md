@@ -10,8 +10,8 @@ dalam aplikasi inventory.
 - [x] Work the update workflow to update status to timeline
 - [x] add the workflow step id to the env
 - [x] map automatically the step id into the update stock timeline page
-- [ ] make a predict stock timeline page
-- [ ] do the same above for dynamic stuff
+- [x] make a predict stock timeline page
+- [x] do the same above for dynamic stuff
 - [ ] make a report timeline page
 - [ ] do the same as above for dynamic stuff
 - [ ] make a report of before and after the update stock, like before the update stok, what is the before value and the after value, make it into a report data in json
