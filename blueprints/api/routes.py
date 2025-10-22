@@ -36,11 +36,15 @@ def predict_stok():
         return jsonify({"error": error_msg}), 500
 
     try:
+        # --- FIX: Add request_time as required by the Go backend ---
+        data_to_forward["request_time"] = datetime.datetime.now().isoformat()
+        # --- END FIX ---
+
         update_app_status_via_api(f"📤 Mengirim permintaan prediksi stok untuk task: {task_id}")
 
         response = requests.post(
             workflow_2_url,
-            json=data_to_forward,
+            json=data_to_forward, # This now includes request_time
             headers={'Content-Type': 'application/json'},
             timeout=30
         )
@@ -219,67 +223,96 @@ def save_summary_result():
 @api_bp.route('/workflow/start', methods=['POST'])
 def start_workflow():
     """
-    Starts an n8n workflow. This is now generic and requires a 'workflow_type'.
+    Starts an n8n workflow OR the Go prediction workflow.
     """
     data = request.get_json()
     workflow_type = data.get('workflow_type', 'update')
     date_str = data.get('date')
 
-    if workflow_type == 'update' and not date_str:
-        return jsonify({"error": "Invalid request, 'date' is required for 'update' workflow"}), 400
+    if not date_str:
+        return jsonify({"error": "Invalid request, 'date' is required"}), 400
 
     workflows_config = current_app.config.get('WORKFLOWS')
     if not workflows_config:
         return jsonify({"error": "WORKFLOWS definition not found in configuration."}), 500
 
-    n8n_webhook_url = current_app.config.get("N8N_WEBHOOK_URL")
-    if not n8n_webhook_url:
-        return jsonify({"error": "N8N_WEBHOOK_URL environment variable is not set."}), 500
-    
+    n8n_webhook_url = None
+    n8n_payload = None
+
     task_id = f'workflow_{uuid.uuid4()}'
-    
+
     workflow_title = workflows_config.get(workflow_type, {}).get('title', 'Unknown Workflow')
     task_name = f'{workflow_title} - {datetime.datetime.now().strftime("%Y-%m-%d")}'
 
-    # Store initial task info (status="Dimulai")
+    if workflow_type == 'update':
+        n8n_webhook_url = current_app.config.get("N8N_WEBHOOK_URL")
+        if not n8n_webhook_url:
+            return jsonify({"error": "N8N_WEBHOOK_URL environment variable is not set."}), 500
+
+        n8n_payload = [{
+            'date': date_str,
+            'flask_task_id': task_id,
+            'workflow_type': workflow_type,
+            'flask_webhook_url': f'{os.getenv("INTERNAL_API_BASE_URL", "http://localhost:5000")}/api/workflow/update'
+        }]
+
+    elif workflow_type == 'prediction':
+        n8n_webhook_url = current_app.config.get("WORKFLOW_2") # Get the Go backend URL
+        if not n8n_webhook_url:
+             return jsonify({"error": "WORKFLOW_2 (prediction workflow) environment variable is not set."}), 500
+
+        go_task_id = f"prediksi_{int(datetime.datetime.now().timestamp() * 1000)}"
+
+        n8n_payload = {
+            "prediction_date": date_str,
+            "request_time": datetime.datetime.now().isoformat(),
+            "task_id": go_task_id,
+            "flask_task_id": task_id,
+            "workflow_type": workflow_type,
+            "flask_webhook_url": f'{os.getenv("INTERNAL_API_BASE_URL", "http://localhost:5000")}/api/workflow/update'
+        }
+
+    else:
+        return jsonify({"error": f"Unknown workflow_type: {workflow_type}"}), 400
+
     store_task_info(
         task_id,
         task_name,
-        f'daily_sales_{date_str}.csv' if date_str else 'N/A',
+        f'Prediction for {date_str}' if workflow_type == 'prediction' else f'daily_sales_{date_str}.csv',
         datetime.datetime.now().isoformat(),
-        status="Dimulai", # Keep initial status as "Dimulai" in Redis task details
+        status="Dimulai",
         last_message='Task dibuat, proses akan segera dimulai.',
-        workflow_type=workflow_type # Pass workflow_type here
+        workflow_type=workflow_type
     )
-    
-    n8n_payload = [{
-        'date': date_str,
-        'flask_task_id': task_id,
-        'workflow_type': workflow_type,
-        'flask_webhook_url': f'{os.getenv("INTERNAL_API_BASE_URL", "http://localhost:5000")}/api/workflow/update'
-    }]
-    
+
     try:
-        # --- FIX IS HERE: Update global status BEFORE sending webhook ---
         update_app_status_via_api(f"🚀 Memulai Workflow '{workflow_type}' ({task_id})")
+
+        # --- FIX: Increased timeout from 10 to 30 seconds ---
+        response = requests.post(n8n_webhook_url, json=n8n_payload, timeout=30)
         # --- END FIX ---
-        
-        # Trigger n8n
-        response = requests.post(n8n_webhook_url, json=n8n_payload, timeout=10)
+
         response.raise_for_status()
-        
+
         return jsonify({
-            "message": f"Workflow '{workflow_type}' dimulai", 
+            "message": f"Workflow '{workflow_type}' dimulai",
             "task_id": task_id,
             "workflow_type": workflow_type
         }), 202
 
     except requests.exceptions.RequestException as e:
+        # Check if the error is a timeout
         error_message = f"Gagal memicu n8n: {e}"
-        # Update global status to show failure
-        update_app_status_via_api(f"❌ Gagal memulai Workflow '{workflow_type}' ({task_id})")
+        if isinstance(e, requests.exceptions.Timeout):
+            error_message = f"Gagal memicu n8n: Timeout menunggu respon dari {n8n_webhook_url} setelah 30 detik."
+            update_app_status_via_api(f"⏳ Timeout memulai Workflow '{workflow_type}' ({task_id})")
+        else:
+             update_app_status_via_api(f"❌ Gagal memulai Workflow '{workflow_type}' ({task_id})")
+
         redis_conn = current_app.redis_conn
         if redis_conn:
             redis_conn.hset(f"task:{task_id}", "status", "FAILURE")
             redis_conn.hset(f"task:{task_id}", "last_message", error_message)
-        return jsonify({"error": f"Failed to trigger n8n workflow: {e}"}), 500
+        # Return 504 Gateway Timeout specifically for timeout errors
+        status_code = 504 if isinstance(e, requests.exceptions.Timeout) else 500
+        return jsonify({"error": error_message}), status_code
