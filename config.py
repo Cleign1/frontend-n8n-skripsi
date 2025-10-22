@@ -31,19 +31,22 @@ class Config:
             'title': 'Proses Update Stok',
             'steps': [
                 {'id': os.getenv("UPDATE_STEP_1_ID"), 'name': 'Webhook Trigger', 'description': 'Webhook Trigger'},
-                {'id': os.getenv("UPDATE_STEP_2_ID"), 'name': 'Process CSV', 'description': 'Mencari file CSV berdasarkan tanggals'},
+                {'id': os.getenv("UPDATE_STEP_2_ID"), 'name': 'Process CSV', 'description': 'Mencari file CSV berdasarkan tanggal'},
                 {'id': os.getenv("UPDATE_STEP_3_ID"), 'name': 'Download CSV', 'description': 'Mendownload file CSV'},
                 {'id': os.getenv("UPDATE_STEP_4_ID"), 'name': 'Extract CSV File', 'description': 'Ekstrak file CSV'},
                 {'id': os.getenv("UPDATE_STEP_5_ID"), 'name': 'Prepare Bulk Query', 'description': 'Siapkan kueri massal untuk pembaruan stok'},
                 {'id': os.getenv("UPDATE_STEP_6_ID"), 'name': 'Eksekusi Kueri SQL', 'description': 'Mengeksekusi kueri SQL untuk memperbarui stok di database'},
             ]
         },
-        # 'prediction': {
-        #     'title': 'Proses Prediksi Stok',
-        #     'steps': [
-        #         {'id': os.getenv("PREDICTION_STEP_1_ID"), 'name': 'Webhook Trigger', 'description': 'Trigger untuk memulai prediksi stok'},
-        #     ]
-        # },
+        'prediction': {
+            'title': 'Proses Prediksi Stok',
+            'steps': [
+                {'id': os.getenv("PREDICTION_STEP_ID_WEBHOOK"), 'name': 'Webhook Trigger', 'description': 'Trigger untuk memulai prediksi stok'},
+                {'id': os.getenv("PREDICTION_STEP_ID_GET_DATA"), 'name': 'Process Data', 'description': 'Mengambil data terbaru dari database untuk prediksi stok'},
+                {'id': os.getenv("PREDICTION_STEP_ID_RUN_PREDICTION"), 'name': 'Prediksi Stok', 'description': 'Melakukan prediksi stok berdasarkan data yang diambil'},
+                {'id': os.getenv("PREDICTION_STEP_ID_SAVE_RESULTS"), 'name': 'Simpan Hasil Prediksi', 'description': 'Menyimpan hasil prediksi kembali ke database'},
+            ]
+        },
         # 'report': {
         #     'title': 'Proses Pembuatan Laporan',
         #     'steps': [
