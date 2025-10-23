@@ -261,13 +261,15 @@ def start_workflow():
         if not n8n_webhook_url:
              return jsonify({"error": "WORKFLOW_2 (prediction workflow) environment variable is not set."}), 500
 
-        go_task_id = f"prediksi_{int(datetime.datetime.now().timestamp() * 1000)}"
-
+        # --- FIX ---
+        # We no longer need the separate 'go_task_id'.
+        # We will send the main 'task_id' (workflow_...) in the 'task_id' field,
+        # as this is the only field the Go service seems to be reading.
+        
         n8n_payload = {
             "prediction_date": date_str,
             "request_time": datetime.datetime.now().isoformat(),
-            "task_id": go_task_id,
-            "flask_task_id": task_id,
+            "task_id": task_id,  # <--- This now correctly sends the "workflow_..." ID
             "workflow_type": workflow_type,
             "flask_webhook_url": f'{os.getenv("INTERNAL_API_BASE_URL", "http://localhost:5000")}/api/workflow/update'
         }
