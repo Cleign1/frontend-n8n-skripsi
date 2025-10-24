@@ -23,7 +23,7 @@ def trigger_n8n_summary_workflow(self):
         # This allows n8n to send the result back to the correct task.
         url_with_task_id = f"{webhook_url}?flask_task_id={task_id}"
 
-        response = requests.get(url_with_task_id, timeout=15)
+        response = requests.post(url_with_task_id, timeout=15)
         response.raise_for_status()  # Raise an exception for bad status codes
 
         # The task state will be updated by the n8n callback via the API
