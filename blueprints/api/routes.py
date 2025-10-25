@@ -191,7 +191,6 @@ def save_summary_result():
     It expects a `flask_task_id` in the query string to link the result
     to the correct Celery task.
     """
-    # Get the task_id that we originally sent to the n8n webhook
     task_id = request.args.get('flask_task_id')
     if not task_id:
         return jsonify({"error": "Query parameter 'flask_task_id' is required"}), 400
@@ -203,6 +202,20 @@ def save_summary_result():
     try:
         redis_client = redis.Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], db=0,
                                    decode_responses=True)
+
+        # --- START FIX: Ensure file_id has .csv and inject date if missing ---
+        if 'file_id' in data and not data['file_id'].endswith('.csv'):
+             data['file_id'] += '.csv' # Add .csv if missing
+             print(f"Appended .csv to file_id for task {task_id}. New file_id: {data['file_id']}")
+
+        if 'date' not in data or not data.get('date'):
+            task_info = redis_client.hgetall(f"task:{task_id}")
+            prediction_date = task_info.get('prediction_date')
+            if prediction_date:
+                data['date'] = prediction_date
+                print(f"Injected missing date '{prediction_date}' into summary for task {task_id}")
+        # --- END FIX ---
+
 
         # Store the entire JSON result from n8n
         redis_client.set(f'summary_result:{task_id}', json.dumps(data), ex=604800) # Expires in 7 days
