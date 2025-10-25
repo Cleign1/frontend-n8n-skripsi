@@ -54,6 +54,16 @@ class Config:
         #     ]
         # }
     }
+    
+    # Cloudflare R2 (S3-compatible) configuration
+    R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
+    R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
+    R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID")  # optional if R2_ENDPOINT_URL set
+    R2_ENDPOINT_URL = os.getenv("R2_ENDPOINT_URL")  # if not set, will be constructed from R2_ACCOUNT_ID
+    R2_REGION = os.getenv("R2_REGION", "auto")
+    R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "skripsi")
+    # Default key template: prediction/{date}.csv (e.g., prediction/2025-10-24.csv)
+    SUMMARY_R2_KEY_TEMPLATE = os.getenv("SUMMARY_R2_KEY_TEMPLATE", "prediction/{date}.csv")
 
     # Celery configuration
     CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
