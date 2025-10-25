@@ -5,34 +5,47 @@ from celery_app import celery
 
 
 @celery.task(bind=True)
-def trigger_n8n_summary_workflow(self):
+def trigger_n8n_summary_workflow(self, workflow_task_id, date_str):
     """
     Celery task that triggers the n8n summary workflow via a webhook
-    and waits for a callback.
+    using the provided workflow_task_id (workflow_<uuid>) and date.
+    n8n should call back to /api/save-summary-result?flask_task_id=<workflow_task_id>
+    with the final JSON payload (ideally including 'date').
     """
-    task_id = self.request.id
+    # Keep Celery's own state tracking for visibility
     self.update_state(state='PENDING', meta={'status': 'Triggering n8n workflow...'})
 
     try:
-        # Get the webhook URL from the application configuration
         webhook_url = current_app.config.get("N8N_SUMMARY_WEBHOOK_URL")
         if not webhook_url:
             raise ValueError("N8N_SUMMARY_WEBHOOK_URL is not configured.")
 
-        # Add the Flask task_id to the webhook URL as a query parameter
-        # This allows n8n to send the result back to the correct task.
-        url_with_task_id = f"{webhook_url}?flask_task_id={task_id}"
+        # Pass workflow_task_id to n8n via query parameter for callback mapping
+        url_with_task_id = f"{webhook_url}?flask_task_id={workflow_task_id}"
 
-        response = requests.post(url_with_task_id, timeout=15)
-        response.raise_for_status()  # Raise an exception for bad status codes
+        # Also include the workflow_task_id + date in the JSON body
+        payload = {
+            "workflow_task_id": workflow_task_id,
+            "date": date_str
+        }
 
-        # The task state will be updated by the n8n callback via the API
-        self.update_state(state='STARTED', meta={'status': 'Workflow triggered. Waiting for n8n to complete and call back.'})
-        return {'status': 'SUCCESS', 'message': f'Successfully triggered n8n workflow. Task ID: {task_id}'}
+        response = requests.post(url_with_task_id, json=payload, timeout=15)
+        response.raise_for_status()
+
+        # The final status will be updated by the n8n callback via /api/save-summary-result
+        self.update_state(state='STARTED', meta={
+            'status': 'Workflow triggered. Waiting for n8n to complete and call back.',
+            'workflow_task_id': workflow_task_id
+        })
+        return {
+            'status': 'SUCCESS',
+            'message': f'Successfully triggered n8n workflow.',
+            'workflow_task_id': workflow_task_id
+        }
 
     except requests.exceptions.RequestException as e:
         self.update_state(state='FAILURE', meta={'status': f'Failed to trigger n8n: {e}'})
-        return {'status': 'FAILURE', 'message': f'Failed to trigger n8n: {e}'}
+        return {'status': 'FAILURE', 'message': f'Failed to trigger n8n: {e}', 'workflow_task_id': workflow_task_id}
     except ValueError as e:
         self.update_state(state='FAILURE', meta={'status': f'Configuration error: {e}'})
-        return {'status': 'FAILURE', 'message': f'Configuration error: {e}'}
+        return {'status': 'FAILURE', 'message': f'Configuration error: {e}', 'workflow_task_id': workflow_task_id}
