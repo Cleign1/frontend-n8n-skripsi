@@ -47,13 +47,25 @@ class Config:
                 {'id': os.getenv("PREDICTION_STEP_ID_SAVE_RESULTS"), 'name': 'Simpan Hasil Prediksi', 'description': 'Menyimpan hasil prediksi kembali ke database'},
             ]
         },
-        # 'report': {
-        #     'title': 'Proses Pembuatan Laporan',
-        #     'steps': [
-        #         {'id': os.getenv("REPORT_STEP_1_ID"), 'title': 'Menerima Panggilan Webhook', 'description': 'Alur kerja laporan dipicu.'},
-        #     ]
-        # }
+        'report': {
+            'title': 'Proses Pembuatan Laporan',
+            'steps': [
+                {'id': os.getenv("REPORT_STEP_1_ID"), 'title': 'Menerima Panggilan Webhook', 'description': 'Alur kerja laporan dipicu.'},
+                {'id': os.getenv("REPORT_STEP_2_ID"), 'title': 'Mencari Data di Bucket', 'description': 'Mencari data yang diperlukan untuk laporan.'},
+                {'id': os.getenv("REPORT_STEP_3_ID"), 'title': 'Mencari File terbaru', 'description': 'Mencari file terbaru berdasarkan tanggal.'},
+                {'id': os.getenv("REPORT_STEP_4_ID"), 'title': 'Mendownload File', 'description': 'Mendownload file terbaru untuk laporan.'},
+                {'id': os.getenv("REPORT_STEP_5_ID"), 'title': 'Mengekstrak File', 'description': 'Mengekstrak konten file untuk laporan.'},
+                {'id': os.getenv("REPORT_STEP_6_ID"), 'title': 'Membuat Kesimpulan', 'description': 'Membuat kesimpulan dari data yang diekstrak.'},
+                {'id': os.getenv("REPORT_STEP_7_ID"), 'title': 'Mengubah Format ke Json', 'description': 'Mengubah format laporan menjadi JSON.'},
+                {'id': os.getenv("REPORT_STEP_8_ID"), 'title': 'Mengubah Nama File', 'description': 'Mengubah nama file laporan sesuai standar.'},
+                {'id': os.getenv("REPORT_STEP_9_ID"), 'title': 'Menyimpan File di Disk', 'description': 'Menyimpan file laporan di disk.'},
+                {'id': os.getenv("REPORT_STEP_10_ID"), 'title': 'Mengupload File ke R2', 'description': 'Mengupload file laporan ke R2.'},
+                
+            ]
+        }
     }
+    
+    N8N_CHAT_WEBHOOK_URL= os.getenv("N8N_CHAT_WEBHOOK_URL")
     
     # Cloudflare R2 (S3-compatible) configuration
     R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
