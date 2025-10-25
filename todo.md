@@ -12,8 +12,9 @@ dalam aplikasi inventory.
 - [x] map automatically the step id into the update stock timeline page
 - [x] make a predict stock timeline page
 - [x] do the same above for dynamic stuff
-- [ ] make a report timeline page
-- [ ] do the same as above for dynamic stuff
+- [x] make a report timeline page
+- [x] do the same as above for dynamic stuff
 - [ ] make a report of before and after the update stock, like before the update stok, what is the before value and the after value, make it into a report data' in json
 - [ ] add a database sql viewer into the flask app, to see the database in real time, idk how i will manage that
+- [ ] fix the database index to Product ID
 - [x] change the socketio update rate like per 1 detik atau 2 detik biar gk penuh servernya -- done, jadi pake eventlet
