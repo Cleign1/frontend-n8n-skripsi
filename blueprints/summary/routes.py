@@ -94,10 +94,9 @@ def start_summary():
 def show_summary_result(task_id):
     """
     Displays the final analysis result, including a table view of the file
-    downloaded from Cloudflare R2 (S3-compatible) in skripsi/prediction/<file>.
-
-    The date is taken from the saved result (key: 'date') or can be overridden
-    via query parameter (?date=YYYY-MM-DD).
+    downloaded from Cloudflare R2 (S3-compatible) using the file_id
+    provided by the n8n workflow result. Ensures the file_id has .csv.
+    Sorts the displayed CSV data by Product ID.
     """
     try:
         redis_client = redis.Redis(
@@ -113,17 +112,18 @@ def show_summary_result(task_id):
 
         result_data = json.loads(result_data_json)
 
-        # Determine the date used for the R2 object key
-        date_str = result_data.get('date') or request.args.get('date')
-        if not date_str:
+        object_key = result_data.get('file_id')
+
+        if not object_key:
             return render_template(
-                'hasil_rangkuman.html',
-                result=result_data,
-                task_id=task_id,
-                csv_headers=[],
-                csv_rows=[],
-                file_content_error="No date provided; unable to locate report in R2."
+                'hasil_rangkuman.html', result=result_data, task_id=task_id, csv_headers=[], csv_rows=[],
+                file_content_error=f"Report file path ('file_id') not found in the summary result for task {task_id}."
             )
+
+        if not object_key.lower().endswith('.csv'):
+            object_key += '.csv'
+            print(f"Appended .csv to object_key. Now using: {object_key}")
+
 
         # Cloudflare R2 S3-compatible configuration
         r2_access_key = current_app.config.get('R2_ACCESS_KEY_ID')
@@ -132,33 +132,21 @@ def show_summary_result(task_id):
         r2_endpoint_url = current_app.config.get('R2_ENDPOINT_URL')
         r2_region = current_app.config.get('R2_REGION', 'auto')
         r2_bucket = current_app.config.get('R2_BUCKET_NAME', 'skripsi')
-        key_template = current_app.config.get('SUMMARY_R2_KEY_TEMPLATE', 'prediction/{date}.csv')
 
         if not r2_endpoint_url:
             if not r2_account_id:
                 return render_template(
-                    'hasil_rangkuman.html',
-                    result=result_data,
-                    task_id=task_id,
-                    csv_headers=[],
-                    csv_rows=[],
+                    'hasil_rangkuman.html', result=result_data, task_id=task_id, csv_headers=[], csv_rows=[],
                     file_content_error="R2 endpoint not configured. Set R2_ENDPOINT_URL or R2_ACCOUNT_ID."
                 )
             r2_endpoint_url = f"https://{r2_account_id}.r2.cloudflarestorage.com"
 
         if not (r2_access_key and r2_secret_key):
             return render_template(
-                'hasil_rangkuman.html',
-                result=result_data,
-                task_id=task_id,
-                csv_headers=[],
-                csv_rows=[],
+                'hasil_rangkuman.html', result=result_data, task_id=task_id, csv_headers=[], csv_rows=[],
                 file_content_error="R2 credentials not configured. Set R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY."
             )
 
-        object_key = key_template.format(date=date_str)
-
-        # Download from R2 and parse CSV without writing to disk
         s3 = boto3.client(
             's3',
             aws_access_key_id=r2_access_key,
@@ -172,25 +160,62 @@ def show_summary_result(task_id):
         file_content_error = None
 
         try:
+            print(f"Attempting to download R2 object: Bucket='{r2_bucket}', Key='{object_key}'")
             obj = s3.get_object(Bucket=r2_bucket, Key=object_key)
             with io.TextIOWrapper(obj['Body'], encoding='utf-8') as f:
                 reader = csv.reader(f)
+                temp_rows = [] # Use a temporary list to store rows before sorting
                 for i, row in enumerate(reader):
                     if i == 0:
                         csv_headers = row
                     else:
-                        csv_rows.append(row)
-                        if i >= 50:  # limit preview rows
-                            break
+                        temp_rows.append(row) # Add to temporary list
+
+            print(f"Successfully downloaded {len(temp_rows)} data rows from {object_key}")
+
+            # --- START SORTING LOGIC ---
+            if temp_rows:
+                # Find the index of 'PRODUCT ID' (case-insensitive)
+                product_id_index = -1
+                if csv_headers:
+                    try:
+                        # Find the index, ignoring case and stripping whitespace
+                        product_id_index = [h.strip().lower() for h in csv_headers].index('product id')
+                    except ValueError:
+                        print("Warning: 'PRODUCT ID' header not found. Cannot sort by Product ID.")
+                        csv_rows = temp_rows # Use unsorted rows if header not found
+
+                if product_id_index != -1:
+                    def sort_key(row):
+                        try:
+                            # Attempt to convert the value at the found index to an integer
+                            return int(row[product_id_index])
+                        except (ValueError, IndexError):
+                            # If conversion fails or index is out of bounds,
+                            # return a large number to place it at the end
+                            return float('inf')
+
+                    temp_rows.sort(key=sort_key)
+                    print(f"Sorted {len(temp_rows)} rows by Product ID (Column Index: {product_id_index}).")
+                    csv_rows = temp_rows[:501] # Apply limit *after* sorting
+                else:
+                    csv_rows = temp_rows[:501] # Apply limit even if sorting failed
+            # --- END SORTING LOGIC ---
+
+
+        except s3.exceptions.NoSuchKey:
+             file_content_error = f"Error: The specified report file was not found in R2: '{r2_bucket}/{object_key}'"
+             print(file_content_error)
         except Exception as e:
             file_content_error = f"Failed to download or parse R2 object '{r2_bucket}/{object_key}': {e}"
+            print(f"Error details: {e}")
 
         return render_template(
             'hasil_rangkuman.html',
             result=result_data,
             task_id=task_id,
             csv_headers=csv_headers,
-            csv_rows=csv_rows,
+            csv_rows=csv_rows, # Pass the sorted (and limited) rows
             file_content_error=file_content_error
         )
 
