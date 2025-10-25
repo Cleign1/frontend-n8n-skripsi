@@ -7,6 +7,7 @@
     <title>Mengobrol dengan Agen AI</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
+    <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
 </head>
 
 <body class="h-full flex flex-col bg-gray-100">
@@ -26,28 +27,40 @@
     <script type="module">
         import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
-        // Using the JS library method as it allows us to interact with localStorage
-        createChat({
-            webhookUrl: 'https://n8n.ibnukhaidar.live/webhook/e9df7af1-eb86-4cfe-83f9-c02220ab0bc9/chat',
-            mode: 'fullscreen',
-            defaultLanguage: 'id',
-            loadPreviousSession: true,
-            showWelcomeScreen: true,
-            initialMessages: [
-                'Halo! 👋',
-                'Saya Agen n8n. Bagaimana saya bisa membantu Anda hari ini?',
-            ],
-            i18n: {
-                id: {
-                    title: "Agen n8n",
-                    subtitle: "Pembantu agen n8n",
-                    footer: '',
-                    getStarted: "Mulai",
-                    inputPlaceholder: 'Ketik pertanyaan Anda..',
-                }
-            },
+        // --- Use the URL passed from Flask ---
+        const n8nWebhookUrl = {{ chat_webhook_url | tojson }}; // Use Jinja variable + tojson filter
 
-        });
+        if (!n8nWebhookUrl) {
+            console.error("Chat Webhook URL is not defined!");
+            // Optionally display an error message to the user in the chat div
+            const chatDiv = document.getElementById('n8n-chat');
+            if (chatDiv) {
+                chatDiv.innerHTML = '<p class="p-4 text-red-600 font-semibold">Error: Chat service URL is not configured.</p>';
+            }
+        } else {
+            createChat({
+                webhookUrl: n8nWebhookUrl, // Use the variable here
+                mode: 'fullscreen',
+                defaultLanguage: 'id',
+                loadPreviousSession: true,
+                showWelcomeScreen: true,
+                initialMessages: [
+                    'Halo! 👋',
+                    'Saya Agen n8n. Bagaimana saya bisa membantu Anda hari ini?',
+                ],
+                i18n: {
+                    id: {
+                        title: "Agen n8n",
+                        subtitle: "Pembantu agen n8n",
+                        footer: '',
+                        getStarted: "Mulai",
+                        inputPlaceholder: 'Ketik pertanyaan Anda..',
+                    }
+                },
+            });
+        }
+        // --- End change ---
+
 
         const resetButton = document.getElementById('reset-chat-button');
         if (resetButton) {
