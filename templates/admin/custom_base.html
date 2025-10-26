@@ -1,0 +1,77 @@
+{# templates/admin/custom_base.html #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> {# Added shrink-to-fit for Bootstrap #}
+    <title>{% block title %}{% if admin_view.name %}{{ admin_view.name }} - {% endif %}{{ admin_view.admin.name }}{% endblock %}</title>
+
+    {# --- Load Bootstrap 4 CSS FIRST --- #}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    {# Optional: Load Flask-Admin's specific BS4 overrides #}
+    <link href="{{ url_for('admin.static', filename='admin/css/bootstrap4/admin.css', v='1.1.1') }}" rel="stylesheet">
+
+    {# --- Load YOUR Custom CSS LAST --- #}
+    <link href="{{ url_for('static', filename='css/custom_admin.css') }}" rel="stylesheet">
+
+    {# --- Favicon --- #}
+    <link rel="icon" href="{{ url_for('static', filename='logo_desktop.svg') }}" type="image/svg+xml">
+
+    {# Other head blocks from Flask-Admin if needed #}
+    {% block head_css %}{% endblock %}
+    {% block head %}{% endblock %}
+    {% block style %}{% endblock %}
+</head>
+{# --- Apply your theme classes directly to body --- #}
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col custom-admin-body"> {# Added custom class #}
+
+    {% include "components/header.html" %}
+
+    {# Use standard Bootstrap container, styled via custom CSS #}
+<main role="main" class="container-fluid flex-grow">
+
+        {# Back Button #}
+        {% block back_button %}
+            <div class="my-3">
+                <a href="{{ url_for('main.index') }}" class="btn btn-back">
+                    &laquo; Back to Home
+                </a>
+            </div>
+        {% endblock %}
+
+        {# Flask-Admin Messages Block #}
+        {% block messages %}
+            {{ lib.render_messages() }}
+        {% endblock %}
+
+        {# --- Flask-Admin Main Content Block --- #}
+        <div class="admin-content-wrapper bg-white rounded shadow-md border border-gray-200 p-4">
+            {# --- ADD RESPONSIVE WRAPPER HERE --- #}
+            <div class="table-responsive">
+                {% block body %}{% endblock %} {# Content (table) goes inside wrapper #}
+            </div>
+            {# --------------------------------- #}
+        </div>
+
+    </main>
+
+    {% include "components/footer.html" %}
+
+    {# --- Load JQuery, Popper, Bootstrap 4 JS --- #}
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>
+
+    {# --- Load Flask-Admin specific JS --- #}
+    <script src="{{ url_for('admin.static', filename='vendor/moment.min.js', v='2.29.4') }}"></script>
+    <script src="{{ url_for('admin.static', filename='vendor/select2/select2.min.js', v='4.0.13') }}"></script>
+    <script src="{{ url_for('admin.static', filename='admin/js/helpers.js', v='1.1.1') }}"></script>
+    {# JS needed for list view features #}
+    <script src="{{ url_for('admin.static', filename='admin/js/bs4_list.js', v='1.0.0') }}"></script>
+
+    {# Other tail blocks from Flask-Admin if needed #}
+    {% block tail_js %}{% endblock %}
+    {% block tail %}{% endblock %}
+
+</body>
+</html>
