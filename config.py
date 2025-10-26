@@ -19,6 +19,9 @@ class Config:
     # N8N Webhook URL
     N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
     N8N_CHAT_WEBHOOK_URL = os.getenv("N8N_CHAT_WEBHOOK_URL")
+    
+    # SQLAlchemy Database URL
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
 
     # GCP Bucket Config
     GCP_BUCKET_NAME = os.getenv("GCP_BUCKET_NAME")
