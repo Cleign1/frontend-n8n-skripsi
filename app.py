@@ -12,6 +12,10 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from dateutil import parser
 from babel.dates import format_datetime as babel_format_datetime
 
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+from db_setup import db, Base, init_db_and_models
+
 # Get the absolute path of the project's root directory (where app.py is located)
 _basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -58,6 +62,35 @@ def create_app(config_class=Config):
         elif format == 'medium':
             format="dd MMM y, HH:mm"
         return babel_format_datetime(dt, format, locale='en')
+    
+    # init database and autodiscover models
+    init_db_and_models(app)
+    admin = Admin(
+        app, 
+        name='Database Viewer',
+        url='/database',
+        )
+    
+    with app.app_context():
+        target_table_name = "amazon_dataset"
+        if target_table_name in Base.classes:
+            model = Base.classes[target_table_name]
+            display_name = "Amazon Dataset"
+            class CustomModelView(ModelView):
+                column_default_sort = ('product_id', False)
+                can_create = False
+                can_edit = True
+                can_delete = False
+                base_template = 'admin/custom_base.html'
+                page_size = 25
+            admin.add_view(CustomModelView(
+                model,
+                db.session,
+                name=display_name,
+                endpoint='amazon_dataset',
+                ))
+        else:
+            print(f"Warning: Table '{target_table_name}' not found in the database.")
 
     # Initialize extensions
     socketio.init_app(app)
