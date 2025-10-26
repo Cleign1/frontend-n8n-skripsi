@@ -1,0 +1,149 @@
+/* static/css/custom_admin.css */
+
+/* --- Core Layout & Theme --- */
+body.custom-admin-body { /* Use the specific class */
+    background-color: #f9fafb !important; /* bg-gray-50 */
+    color: #1f2937 !important; /* text-gray-800 */
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+}
+
+main.container-fluid {
+    flex-grow: 1;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    max-width: 1280px; /* max-w-7xl */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* --- Header Override --- */
+/* Target the header included from components/header.html if needed */
+/* Example: assuming your header uses a <nav> tag */
+nav.bg-yellow-100 { /* Make selector specific to your header component */
+    background-color: #fef3c7 !important; /* bg-yellow-100 */
+    color: #1f2937 !important; /* text-black/gray-800 */
+    /* Add other styles from your component's header */
+    padding: 1rem 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-md */
+    font-weight: 600; /* font-semibold */
+}
+/* Style links within your specific header */
+nav.bg-yellow-100 ul li a {
+    color: #1f2937 !important;
+}
+nav.bg-yellow-100 ul li a:hover {
+    color: #6b7280 !important; /* text-gray-500 */
+}
+
+
+/* --- Content Wrapper (Optional Styling) --- */
+.admin-content-wrapper {
+    background-color: #ffffff; /* bg-white */
+    border-radius: 0.375rem; /* rounded */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-md */
+    border: 1px solid #e5e7eb; /* border border-gray-200 */
+    padding: 1rem; /* p-4 */
+    overflow-x: auto; /* Ensure horizontal scrolling */
+}
+
+
+/* --- Table Styling (Overrides Bootstrap) --- */
+.admin-content-wrapper .table { /* Target table inside the wrapper */
+    margin-bottom: 0; /* Remove Bootstrap's default margin */
+}
+
+.admin-content-wrapper .table thead th {
+    background-color: #f9fafb !important; /* bg-gray-100 */
+    color: #4b5563 !important; /* text-gray-600 */
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 0.75rem !important; /* text-xs */
+    letter-spacing: 0.05em !important; /* tracking-wider */
+    border-bottom-width: 2px !important;
+    border-color: #e5e7eb !important; /* border-gray-200 */
+    padding: 0.75rem 1rem !important;
+    vertical-align: bottom !important; /* Default BS vertical align */
+}
+/* Style sorting links */
+.admin-content-wrapper .table thead th a {
+    color: #4b5563 !important;
+}
+.admin-content-wrapper .table thead th a:hover {
+    color: #1f2937 !important;
+    text-decoration: none !important;
+}
+
+
+.admin-content-wrapper .table tbody tr:hover {
+    background-color: #f9fafb !important; /* hover:bg-gray-50 */
+}
+
+.admin-content-wrapper .table td,
+.admin-content-wrapper .table th {
+    vertical-align: top !important;
+    padding: 0.75rem 1rem !important;
+    border-top: 1px solid #e5e7eb !important; /* border-gray-200 */
+}
+
+.admin-content-wrapper .table tbody td {
+     color: #374151 !important; /* text-gray-700 */
+     font-size: 0.875rem !important; /* text-sm */
+}
+
+/* --- Back Button --- */
+.btn-back {
+  display: inline-block;
+  font-weight: 600; /* semibold */
+  color: #374151; /* gray-700 */
+  text-align: center;
+  vertical-align: middle;
+  user-select: none;
+  background-color: #e5e7eb; /* gray-200 */
+  border: 1px solid #d1d5db; /* gray-300 */
+  padding: 0.5rem 1rem; /* py-2 px-4 */
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.25rem;
+  border-radius: 0.375rem; /* rounded-md */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+  transition: background-color 0.15s ease-in-out;
+}
+
+.btn-back:hover {
+  color: #1f2937; /* gray-800 */
+  background-color: #d1d5db; /* gray-300 */
+  text-decoration: none;
+}
+
+/* --- Pagination (Basic Overrides) --- */
+.pagination {
+    /* Add Tailwind flex/spacing if needed, BS4 handles layout */
+}
+.page-item.active .page-link {
+    background-color: #fef3c7; /* Your yellow */
+    border-color: #fde68a;
+    color: #1f2937; /* Dark text */
+}
+.page-link {
+    color: #1f2937; /* Dark text */
+}
+.page-link:hover {
+    color: #000;
+}
+
+/* --- Footer --- */
+/* Add styles for your included footer if needed */
+footer { /* Or be more specific */
+    margin-top: auto; /* Pushes footer down */
+    /* Styles from components/footer.html likely apply */
+}
+
+/* --- Responsive Table Wrapper --- */
+/* Bootstrap's .table-responsive should handle this if applied in template */
+.table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
