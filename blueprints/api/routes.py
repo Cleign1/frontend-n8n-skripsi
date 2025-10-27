@@ -1,7 +1,8 @@
 # blueprints/api/routes.py
 import uuid
 import json
-import datetime
+from datetime import datetime
+from dateutil import tz
 import requests
 import redis
 import os
@@ -22,6 +23,7 @@ def predict_stok():
     # The payload is a JSON object, get the task_id from it
     task_id = data_to_forward.get('task_id')
     redis_conn = current_app.redis_conn
+    jakarta_tz = tz.gettz('Asia/Jakarta')
 
     # Get the target webhook URL from environment variables
     workflow_2_url = current_app.config.get("WORKFLOW_2")
@@ -36,7 +38,7 @@ def predict_stok():
 
     try:
         # --- FIX: Add request_time as required by the Go backend ---
-        data_to_forward["request_time"] = datetime.datetime.now().isoformat()
+        data_to_forward["request_time"] = datetime.now(jakarta_tz).isoformat()
         # --- END FIX ---
 
         update_app_status_via_api(f"📤 Mengirim permintaan prediksi stok untuk task: {task_id}")
@@ -240,6 +242,7 @@ def start_workflow():
     data = request.get_json()
     workflow_type = data.get('workflow_type', 'update')
     date_str = data.get('date')
+    jakarta_tz = tz.gettz('Asia/Jakarta')
 
     if not date_str:
         return jsonify({"error": "Invalid request, 'date' is required"}), 400
@@ -254,7 +257,7 @@ def start_workflow():
     task_id = f'workflow_{uuid.uuid4()}'
 
     workflow_title = workflows_config.get(workflow_type, {}).get('title', 'Unknown Workflow')
-    task_name = f'{workflow_title} - {datetime.datetime.now().strftime("%Y-%m-%d")}'
+    task_name = f'{workflow_title} - {datetime.now(jakarta_tz).strftime("%Y-%m-%d")}'
 
     if workflow_type == 'update':
         n8n_webhook_url = current_app.config.get("N8N_WEBHOOK_URL")
@@ -280,7 +283,7 @@ def start_workflow():
         
         n8n_payload = {
             "prediction_date": date_str,
-            "request_time": datetime.datetime.now().isoformat(),
+            "request_time": datetime.now(jakarta_tz).isoformat(),
             "task_id": task_id,  # <--- This now correctly sends the "workflow_..." ID
             "workflow_type": workflow_type,
             "flask_webhook_url": f'{os.getenv("INTERNAL_API_BASE_URL", "http://localhost:5000")}/api/workflow/update'
@@ -293,7 +296,7 @@ def start_workflow():
         task_id,
         task_name,
         f'Prediction for {date_str}' if workflow_type == 'prediction' else f'daily_sales_{date_str}.csv',
-        datetime.datetime.now().isoformat(),
+        datetime.now(jakarta_tz).isoformat(),
         status="Dimulai",
         last_message='Task dibuat, proses akan segera dimulai.',
         workflow_type=workflow_type

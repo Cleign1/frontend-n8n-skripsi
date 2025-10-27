@@ -3,7 +3,8 @@ from flask import Blueprint, render_template, request, jsonify, current_app, abo
 from app import socketio
 from ..tasks.utils import store_task_info
 from ..api.utils import update_app_status_via_api
-import datetime
+from datetime import datetime
+from dateutil import tz
 import json
 
 workflow_bp = Blueprint('workflow', __name__, template_folder='../../templates')
@@ -60,7 +61,7 @@ def workflow_webhook():
 
     # --- Add Logging ---
     print("\n--- Webhook Received ---")
-    print(f"Timestamp: {datetime.datetime.now()}")
+    print(f"Timestamp: {datetime.now(tz.gettz('Asia/Jakarta')).isoformat()}")
     print(f"Task ID (from payload): {task_id}")
     print(f"Step ID: {step_id}")
     print(f"Status: {status}")

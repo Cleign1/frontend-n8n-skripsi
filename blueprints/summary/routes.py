@@ -1,5 +1,6 @@
 # blueprints/summary/routes.py
-import datetime
+from datetime import datetime
+from dateutil import tz
 import json
 import redis
 import os
@@ -58,6 +59,7 @@ def start_summary():
         "date": "YYYY-MM-DD"
     }
     """
+    jakarta_tz = tz.gettz('Asia/Jakarta')
     try:
         body = request.get_json(silent=True) or {}
         date_str = body.get('date')
@@ -71,12 +73,12 @@ def start_summary():
         trigger_n8n_summary_workflow.delay(workflow_task_id, date_str)
 
         # Record the task in the task list/timeline using workflow_task_id
-        task_name = f"Inventory Analysis - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        task_name = f"Inventory Analysis - {datetime.now(jakarta_tz).strftime('%Y-%m-%d %H:%M')}"
         store_task_info(
             workflow_task_id,
             task_name,
             "n8n Workflow",
-            datetime.datetime.now().isoformat(),
+            datetime.now(jakarta_tz).isoformat(),
             status='PENDING',
             workflow_type='summary'
         )

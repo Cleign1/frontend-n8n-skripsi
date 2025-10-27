@@ -1,6 +1,7 @@
 # blueprints/api/utils.py
 import requests
-import datetime
+from datetime import datetime
+from dateutil import tz
 import os
 import json # Import json
 from flask import current_app
@@ -9,6 +10,8 @@ from app import socketio # Import socketio instance
 # Remove the global variable 'current_app_status'
 
 GLOBAL_STATUS_KEY = "global_app_status" # Define a Redis key
+jakarta_tz = tz.gettz('Asia/Jakarta')
+
 
 def update_app_status_via_api(status_text):
     """Update global status in Redis and emit Socket.IO event."""
@@ -18,7 +21,7 @@ def update_app_status_via_api(status_text):
             print("Warning: Redis connection not available. Cannot update global status.")
             return
 
-        now_iso = datetime.datetime.now().isoformat()
+        now_iso = datetime.now(jakarta_tz).isoformat()
         status_data = {
             "status": status_text,
             "last_updated": now_iso
@@ -39,7 +42,7 @@ def update_app_status_via_api(status_text):
 def get_current_app_status():
     """Get the current global status from Redis."""
     redis_conn = current_app.redis_conn
-    default_status = {"status": "Idle", "last_updated": datetime.datetime.now().isoformat()}
+    default_status = {"status": "Idle", "last_updated": datetime.now(jakarta_tz).isoformat()}
     if not redis_conn:
         return default_status
         
