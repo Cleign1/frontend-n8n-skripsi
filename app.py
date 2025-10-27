@@ -14,6 +14,7 @@ from babel.dates import format_datetime as babel_format_datetime
 
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
+from flask_admin.menu import MenuLink
 from db_setup import db, Base, init_db_and_models
 
 # Get the absolute path of the project's root directory (where app.py is located)
@@ -66,29 +67,32 @@ def create_app(config_class=Config):
     # init database and autodiscover models
     init_db_and_models(app)
     admin = Admin(
-        app, 
+        app,
         name='Database Viewer',
         url='/database',
         )
-    
+    admin.add_link(MenuLink(name='← Back', category=None, url='javascript:history.back()'))
+    admin.add_link(MenuLink(name='Home', category=None, url='/'))
     with app.app_context():
         target_table_name = "amazon_dataset"
         if target_table_name in Base.classes:
             model = Base.classes[target_table_name]
             display_name = "Amazon Dataset"
+
             class CustomModelView(ModelView):
                 column_default_sort = ('product_id', False)
                 can_create = False
                 can_edit = True
                 can_delete = False
-                base_template = 'admin/custom_base.html'
+                # Keep this too, so the view uses your base even if Admin.base_template isn't read
                 page_size = 25
+
             admin.add_view(CustomModelView(
                 model,
                 db.session,
                 name=display_name,
                 endpoint='amazon_dataset',
-                ))
+            ))
         else:
             print(f"Warning: Table '{target_table_name}' not found in the database.")
 
