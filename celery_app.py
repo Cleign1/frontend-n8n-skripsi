@@ -8,7 +8,8 @@ celery = Celery(
     backend=Config.result_backend,
     include=[
         'blueprints.main.tasks',
-        'blueprints.summary.task'  # Add this line
+        'blueprints.summary.task',
+        'blueprints.upload.task',
     ]
 )
 
