@@ -6,6 +6,8 @@ from flask import Blueprint, render_template, request, current_app, jsonify
 from werkzeug.utils import secure_filename
 from .utils import get_drive_service
 import tempfile
+from .task import upload_file_to_r2
+import uuid
 
 upload_bp = Blueprint('upload', __name__)
 
@@ -43,52 +45,39 @@ def update_stok():
 
     return render_template('upload_stok.html', json_data=json_data, files=files, selected_file=selected_file)
 
-@upload_bp.route('/upload/upload_to_gdrive', methods=['POST'])
-def upload_to_gdrive():
+@upload_bp.route('/upload/start_r2_upload', methods=['POST'])
+def start_r2_upload():
     selected_date = request.form.get('selected_date')
     server_filename = request.form.get('server_filename')
-    client_file = request.files.get('file')
+    # Removed client_file logic as the file should already be on the server
 
     if not selected_date:
         return jsonify({'error': 'No date selected'}), 400
 
-    if not client_file and not server_filename:
-        return jsonify({'error': 'No file provided'}), 400
+    if not server_filename:
+        return jsonify({'error': 'No server filename provided'}), 400
 
-    # *** IMPORTANT: Replace with your actual Google Drive Folder ID ***
-    GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID', 'YOUR_FOLDER_ID_HERE')
-
-    if GOOGLE_DRIVE_FOLDER_ID == 'YOUR_FOLDER_ID_HERE':
-        return jsonify({'error': 'Google Drive folder ID is not configured in the backend.'}), 500
+    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], server_filename)
+    if not os.path.exists(filepath):
+        return jsonify({'error': f'Server file {server_filename} not found.'}), 404
 
     try:
-        drive = get_drive_service()
-        
-        if client_file:
-            filename = secure_filename(client_file.filename)
-            temp_path = os.path.join(tempfile.gettempdir(), filename)
-            client_file.save(temp_path)
-        else:
-            filename = secure_filename(server_filename)
-            temp_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            if not os.path.exists(temp_path):
-                return jsonify({'error': f'Server file {filename} not found.'}), 404
+        # Enqueue the Celery task
+        task = upload_file_to_r2.delay(server_filename, selected_date)
 
-        new_filename = f"daily_sales_{selected_date}.csv"
+        # --- Return the Celery task ID and the Display ID used in store_task_info ---
+        # The Display ID is useful for linking to the /tasks page immediately
+        # We need to peek into the task's request or generate it similarly here.
+        # For simplicity, let's assume the task generates and returns it if needed,
+        # or we just return the Celery ID for now.
+        # Modify the task to return the display ID if needed.
 
-        drive_file = drive.CreateFile({
-            'title': new_filename,
-            'parents': [{'id': GOOGLE_DRIVE_FOLDER_ID}]
-        })
-        
-        drive_file.SetContentFile(temp_path)
-        drive_file.Upload()
-
-        if client_file:
-            os.remove(temp_path)
-
-        return jsonify({'message': f'File {new_filename} uploaded successfully to Google Drive.'})
+        return jsonify({
+            'message': f'R2 upload task started for {server_filename}.',
+            'celery_task_id': task.id,
+            # 'display_task_id': r2_task_display_id # Add this if the task returns it
+            }), 202 # Accepted
 
     except Exception as e:
-        print(f"Google Drive Upload Error: {e}")
-        return jsonify({'error': f'An error occurred during Google Drive upload: {e}'}), 500
+        print(f"Error starting R2 upload task: {e}")
+        return jsonify({'error': f'An error occurred: {e}'}), 500
