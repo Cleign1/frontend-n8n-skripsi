@@ -18,6 +18,8 @@ botocore==1.40.48
     # via
     #   boto3
     #   s3transfer
+cachetools==6.2.1
+    # via google-auth
 celery==5.5.3
     # via frontend-n8n-skripsi (./pyproject.toml)
 certifi==2025.6.15
@@ -61,6 +63,19 @@ flask-sqlalchemy==3.1.1
     # via frontend-n8n-skripsi (./pyproject.toml)
 gdown==5.2.0
     # via frontend-n8n-skripsi (./pyproject.toml)
+google-api-core==2.27.0
+    # via google-api-python-client
+google-api-python-client==2.185.0
+    # via pydrive
+google-auth==2.41.1
+    # via
+    #   google-api-core
+    #   google-api-python-client
+    #   google-auth-httplib2
+google-auth-httplib2==0.2.0
+    # via google-api-python-client
+googleapis-common-protos==1.71.0
+    # via google-api-core
 greenlet==3.2.4
     # via
     #   eventlet
@@ -69,6 +84,11 @@ gunicorn==23.0.0
     # via frontend-n8n-skripsi (./pyproject.toml)
 h11==0.16.0
     # via wsproto
+httplib2==0.31.0
+    # via
+    #   google-api-python-client
+    #   google-auth-httplib2
+    #   oauth2client
 idna==3.10
     # via requests
 itsdangerous==2.2.0
@@ -94,6 +114,8 @@ numpy==2.3.1
     # via
     #   frontend-n8n-skripsi (./pyproject.toml)
     #   pandas
+oauth2client==4.1.3
+    # via pydrive
 packaging==25.0
     # via
     #   gunicorn
@@ -102,8 +124,28 @@ pandas==2.3.0
     # via frontend-n8n-skripsi (./pyproject.toml)
 prompt-toolkit==3.0.51
     # via click-repl
+proto-plus==1.26.1
+    # via google-api-core
+protobuf==6.33.0
+    # via
+    #   google-api-core
+    #   googleapis-common-protos
+    #   proto-plus
 psycopg2-binary==2.9.11
     # via frontend-n8n-skripsi (./pyproject.toml)
+pyasn1==0.6.1
+    # via
+    #   oauth2client
+    #   pyasn1-modules
+    #   rsa
+pyasn1-modules==0.4.2
+    # via
+    #   google-auth
+    #   oauth2client
+pydrive==1.3.1
+    # via frontend-n8n-skripsi (./pyproject.toml)
+pyparsing==3.2.5
+    # via httplib2
 pysocks==1.7.1
     # via requests
 python-dateutil==2.9.0.post0
@@ -119,16 +161,26 @@ python-socketio==5.13.0
     # via flask-socketio
 pytz==2025.2
     # via pandas
+pyyaml==6.0.3
+    # via pydrive
 redis==6.2.0
     # via frontend-n8n-skripsi (./pyproject.toml)
 requests==2.32.4
-    # via gdown
+    # via
+    #   gdown
+    #   google-api-core
+rsa==4.9.1
+    # via
+    #   google-auth
+    #   oauth2client
 s3transfer==0.14.0
     # via boto3
 simple-websocket==1.1.0
     # via python-engineio
 six==1.17.0
-    # via python-dateutil
+    # via
+    #   oauth2client
+    #   python-dateutil
 soupsieve==2.7
     # via beautifulsoup4
 sqlalchemy==2.0.44
@@ -145,6 +197,8 @@ tzdata==2025.2
     # via
     #   kombu
     #   pandas
+uritemplate==4.2.0
+    # via google-api-python-client
 urllib3==2.5.0
     # via
     #   botocore
