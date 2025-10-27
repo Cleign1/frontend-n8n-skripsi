@@ -1,0 +1,24 @@
+{% extends 'admin/base.html' %}
+
+{# Keep admin CSS/JS and add your overrides AFTER so they win #}
+{% block head %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom_admin.css', v='8') }}">
+{% endblock %}
+
+{# IMPORTANT: include {{ super() }} so the built-in admin content renders #}
+{% block body %}
+  {% include 'components/header.html' ignore missing %}
+
+  <div class="container-fluid">
+    <div class="admin-content-wrapper">
+      {{ super() }}
+    </div>
+  </div>
+
+  {% include 'components/footer.html' ignore missing %}
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+{% endblock %}
