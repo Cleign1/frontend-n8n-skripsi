@@ -8,7 +8,6 @@ import os
 from flask import Blueprint, jsonify, request, current_app
 from .utils import update_app_status_via_api, get_current_app_status
 from ..tasks.utils import get_all_tasks, remove_task_from_list, store_task_info
-from ..main.tasks import process_csv_in_batches  # Import the task
 from celery_app import celery
 from celery.contrib.abortable import AbortableAsyncResult
 
