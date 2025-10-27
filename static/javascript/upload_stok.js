@@ -2,14 +2,14 @@
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- UI ELEMENTS ---
-    const uploadGdriveBtn = document.getElementById('upload-gdrive-btn');
+    // --- UI ELEMENTS (Using new R2 IDs) ---
+    const uploadR2Btn = document.getElementById('upload-r2-btn'); // Matched HTML ID
     const workflowStartBtn = document.getElementById('start-update-btn');
-    const fileInput = document.getElementById('file-input'); // Although handled by submit, keep for reference
-    const gdriveDatePicker = document.getElementById('gdrive-date-picker');
+    const fileInput = document.getElementById('file-input');
+    const r2DatePicker = document.getElementById('r2-date-picker'); // Matched HTML ID
     const workflowDatePicker = document.getElementById('workflow-date-picker');
     const workflowDateMessage = document.getElementById('workflow-date-message');
-    const gdriveDateMessage = document.getElementById('gdrive-date-message');
+    const r2DateMessage = document.getElementById('r2-date-message'); // Matched HTML ID
 
     // --- UTILITY FUNCTIONS ---
     function getFormattedDate(datePicker) {
@@ -17,107 +17,102 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectedDate) {
             return null;
         }
-        // Returns date string in YYYY-MM-DD format as needed by backend
-        return selectedDate;
+        // Returns date string in YYYYMMDD format as needed by backend
+        const formattedDate = selectedDate.replace(/-/g, '');
+        return formattedDate;
     }
 
     // --- TOGGLE FUNCTIONS ---
 
     /**
      * Toggles the state of the main workflow button (Start Update Stok).
-     * Enabled only by date selection in the workflow date picker.
      */
     function toggleWorkflowStartButton() {
-        if (!workflowStartBtn || !workflowDatePicker) return; // Guard clause
-
+        if (!workflowStartBtn || !workflowDatePicker) return;
         const selectedDate = workflowDatePicker.value;
         const isDateSelected = !!selectedDate;
-
-        workflowStartBtn.disabled = !isDateSelected; // Directly set disabled state
-
-        if (isDateSelected) {
-            workflowDateMessage.classList.add('hidden');
-        }
-        // Note: Tailwind's `disabled:` modifier handles the visual state
+        workflowStartBtn.disabled = !isDateSelected;
+        workflowDateMessage.classList.toggle('hidden', isDateSelected);
     }
 
     /**
-     * Toggles the state of the Google Drive upload button (Upload to CDN).
-     * Enabled only if a file is on the server AND a date is selected in its block.
+     * Toggles the state of the R2 upload button.
      */
-    function toggleGdriveUploadButton() {
-        if (!uploadGdriveBtn || !gdriveDatePicker) return; // Guard clause
+    function toggleR2UploadButton() { // Function name updated
+        // Use R2 variables
+        if (!uploadR2Btn || !r2DatePicker) return;
 
-        const isFilePresent = !!selectedFileFromServer; // Check if Flask provided a filename
-        const isDateSelected = !!gdriveDatePicker.value;
-
+        const isFilePresent = !!selectedFileFromServer;
+        const isDateSelected = !!r2DatePicker.value;
         const shouldEnable = isFilePresent && isDateSelected;
 
-        uploadGdriveBtn.disabled = !shouldEnable; // Directly set disabled state
+        uploadR2Btn.disabled = !shouldEnable;
 
-        // Show message only if file is present but date is missing
-        if (isFilePresent && !isDateSelected) {
-            gdriveDateMessage.classList.remove('hidden');
+        // Use R2 variables
+        r2DateMessage.classList.toggle('hidden', !isFilePresent || isDateSelected);
+
+        // Update button text dynamically
+        if (isFilePresent) {
+             uploadR2Btn.textContent = `Upload ${selectedFileFromServer} ke R2`; // Updated text
         } else {
-            gdriveDateMessage.classList.add('hidden');
+             uploadR2Btn.textContent = `Upload File ke R2`; // Updated default text
         }
-        // Note: Tailwind's `disabled:` modifier handles the visual state
     }
 
 
     // --- INITIAL STATE SETUP ---
     toggleWorkflowStartButton();
-    toggleGdriveUploadButton(); // Initial check for GDrive button state
+    toggleR2UploadButton(); // Call updated function name
 
-    // --- EVENT LISTENERS ---
+    // --- EVENT LISTENERS (Using R2 variables) ---
 
-    // 1. Listen for workflow date changes
     if (workflowDatePicker) {
         workflowDatePicker.addEventListener('change', toggleWorkflowStartButton);
-        workflowDatePicker.addEventListener('input', toggleWorkflowStartButton); // Also on input for immediate feedback
+        workflowDatePicker.addEventListener('input', toggleWorkflowStartButton);
     }
 
-    // 2. Listen for GDrive date changes
-    if (gdriveDatePicker) {
-        gdriveDatePicker.addEventListener('change', toggleGdriveUploadButton);
-        gdriveDatePicker.addEventListener('input', toggleGdriveUploadButton); // Also on input
+    // Listen for R2 date changes
+    if (r2DatePicker) {
+        r2DatePicker.addEventListener('change', toggleR2UploadButton); // Call updated function name
+        r2DatePicker.addEventListener('input', toggleR2UploadButton); // Call updated function name
     }
 
 
-    // 3. Upload to Google Drive Button Handler (Upload to CDN)
-    if (uploadGdriveBtn) {
-        uploadGdriveBtn.addEventListener('click', async function () {
+    // 3. Upload to R2 Button Handler (Upload to R2)
+    if (uploadR2Btn) {
+        uploadR2Btn.addEventListener('click', async function () {
 
-            // Check file again (should be guaranteed by toggle logic, but safe)
             if (!selectedFileFromServer) {
                 console.error("Upload Error: No file selected on server.");
                 alert("Kesalahan: Tidak ada file di server untuk diupload.");
                 return;
             }
 
-            const formattedDate = getFormattedDate(gdriveDatePicker);
+            // Use R2 variable
+            const formattedDate = getFormattedDate(r2DatePicker);
 
             if (!formattedDate) {
-                 // Should not happen if button is enabled, but good check
-                gdriveDateMessage.classList.remove('hidden');
-                console.error("Upload Error: Date not selected for CDN upload.");
-                alert("Pilih tanggal untuk penamaan file di CDN!");
+                // Use R2 variable
+                r2DateMessage.classList.remove('hidden');
+                console.error("Upload Error: Date not selected for R2 upload.");
+                alert("Pilih tanggal untuk penamaan file di R2!"); // Updated text
                 return;
             }
-            gdriveDateMessage.classList.add('hidden');
+             // Use R2 variable
+            r2DateMessage.classList.add('hidden');
 
             // --- UI Feedback Start ---
-            const originalText = uploadGdriveBtn.textContent;
-            uploadGdriveBtn.disabled = true;
-            uploadGdriveBtn.textContent = 'Uploading...';
-            // Tailwind handles visual disabling via `disabled:` styles
+            const originalText = uploadR2Btn.textContent;
+            uploadR2Btn.disabled = true;
+            uploadR2Btn.textContent = 'Memulai Upload Task...';
 
             const formData = new FormData();
             formData.append('server_filename', selectedFileFromServer);
             formData.append('selected_date', formattedDate);
 
             try {
-                const response = await fetch('/upload/upload_to_gdrive', {
+                // Call the backend endpoint to start the R2 upload task
+                const response = await fetch('/upload/start_r2_upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -125,26 +120,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
 
                 if (response.ok) {
-                    alert(result.message || 'File berhasil diupload ke CDN (Google Drive).');
+                    // Success: Task started
+                    alert(result.message + ` (Task ID: ${result.celery_task_id}). Anda bisa memonitor di halaman Tasks.`);
                 } else {
-                    throw new Error(result.error || 'Gagal mengupload file ke CDN.');
+                    // Failure: Error starting task
+                    throw new Error(result.error || 'Gagal memulai R2 upload task.');
                 }
 
             } catch (error) {
-                console.error("CDN Upload Error:", error);
-                alert('Error: ' + error.message);
+                console.error("R2 Upload Task Start Error:", error);
+                alert('Error memulai task: ' + error.message);
             } finally {
                 // --- UI Feedback End ---
-                uploadGdriveBtn.textContent = originalText;
-                // Re-evaluate button state based on current conditions
-                toggleGdriveUploadButton();
+                uploadR2Btn.textContent = originalText;
+                // Re-evaluate button state
+                toggleR2UploadButton(); // Call updated function name
             }
         });
     }
 
-    // 4. Start Update Stock Workflow Button Handler (Triggers n8n from CDN)
+    // 4. Start Update Stock Workflow Button Handler (Remains the same)
     if (workflowStartBtn) {
-        workflowStartBtn.addEventListener('click', async function() {
+         workflowStartBtn.addEventListener('click', async function() {
             const selectedDate = getFormattedDate(workflowDatePicker);
             if (!selectedDate) {
                 workflowDateMessage.classList.remove('hidden');
@@ -153,14 +150,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             workflowDateMessage.classList.add('hidden');
 
-            // --- UI Feedback Start ---
             const originalText = workflowStartBtn.textContent;
             workflowStartBtn.disabled = true;
             workflowStartBtn.textContent = 'Memulai...';
-             // Tailwind handles visual disabling via `disabled:` styles
 
             try {
-                // Call backend to start the n8n workflow
                 const response = await fetch('/api/workflow/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -170,7 +164,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
 
                 if (response.ok) {
-                    // Redirect to the timeline page on success
                     window.location.href = `/workflow/update/${result.task_id}`;
                 } else {
                     throw new Error(result.error || `Gagal memulai workflow (HTTP ${response.status})`);
@@ -178,13 +171,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                  console.error("Workflow Start Error:", error);
                 alert('Error: Gagal memulai proses update stok. ' + error.message);
-                 // --- UI Feedback End (on error) ---
                 workflowStartBtn.textContent = originalText;
-                // Re-evaluate button state
                 toggleWorkflowStartButton();
             }
-            // No 'finally' needed here as success navigates away.
         });
     }
-});
-
+}); // End DOMContentLoaded
