@@ -14,6 +14,6 @@ dalam aplikasi inventory.
 - [x] do the same above for dynamic stuff
 - [x] make a report timeline page
 - [x] do the same as above for dynamic stuff
-- [ ] add a database sql viewer into the flask app, to see the database in real time, idk how i will manage that
-- [ ] fix the database index to Product ID
+- [x] add a database sql viewer into the flask app, to see the database in real time, idk how i will manage that
+- [x] fix the database index to Product ID
 - [x] change the socketio update rate like per 1 detik atau 2 detik biar gk penuh servernya -- done, jadi pake eventlet
