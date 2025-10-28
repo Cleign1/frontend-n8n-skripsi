@@ -17,7 +17,6 @@ def upload_file_to_r2(self, server_filename, selected_date):
     jakarta_tz = tz.gettz('Asia/Jakarta')
     
     task_id = self.request.id
-    R2_task_display_id = f'R2_upload_{uuid.uuid4()}'
     task_name = f"R2 Upload - {server_filename}"
     created_at_iso = datetime.now(jakarta_tz).isoformat()
     
@@ -44,7 +43,7 @@ def upload_file_to_r2(self, server_filename, selected_date):
     self.update_state(state='PENDING', meta={'status': 'Initializing R2 upload...'})
     # This call creates the initial record
     store_task_info(
-        task_id=R2_task_display_id,
+        task_id=task_id,
         task_name=task_name,
         filename=server_filename,
         created_at=created_at_iso,
@@ -93,7 +92,7 @@ def upload_file_to_r2(self, server_filename, selected_date):
         self.update_state(state='STARTED', meta={'status': upload_message})
         # --- CORRECTED CALL ---
         store_task_info(
-            task_id=R2_task_display_id,
+            task_id=task_id,
             task_name=task_name,          # Provide existing name
             filename=server_filename,    # Provide existing filename
             created_at=created_at_iso,   # Provide existing timestamp
@@ -112,7 +111,7 @@ def upload_file_to_r2(self, server_filename, selected_date):
         self.update_state(state='SUCCESS', meta={'status': final_message, 'result': object_key})
         # --- CORRECTED CALL ---
         store_task_info(
-            task_id=R2_task_display_id,
+            task_id=task_id,
             task_name=task_name,          # Provide existing name
             filename=server_filename,    # Provide existing filename
             created_at=created_at_iso,   # Provide existing timestamp
@@ -120,7 +119,7 @@ def upload_file_to_r2(self, server_filename, selected_date):
             last_message=final_message   # Update message
         )
 
-        return {'status': 'SUCCESS', 'message': final_message, 'object_key': object_key, 'task_id': R2_task_display_id}
+        return {'status': 'SUCCESS', 'message': final_message, 'object_key': object_key, 'task_id': task_id}
 
     except Exception as e:
         error_message = f"R2 Upload Error: {e}"
@@ -129,7 +128,7 @@ def upload_file_to_r2(self, server_filename, selected_date):
         # --- CORRECTED CALL ---
         # Update status to FAILURE using store_task_info
         store_task_info(
-            task_id=R2_task_display_id,
+            task_id=task_id,
             task_name=task_name,          # Provide existing name
             filename=server_filename,    # Provide existing filename
             created_at=created_at_iso,   # Provide existing timestamp
