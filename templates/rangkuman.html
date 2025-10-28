@@ -18,48 +18,61 @@
         <div class="w-full max-w-6xl mx-auto">
 
             <div class="bg-white p-6 rounded-lg shadow-md mb-10">
-                 <h1 class="text-2xl font-bold text-gray-800 mb-4">Jalankan Analisis Inventaris Baru</h1>
-                 <p class="text-gray-600 mb-6">Klik tombol di bawah untuk memicu tugas. Sistem akan menunggu hasil analisis untuk dikirim kembali.</p>
-                 <button
+                <h1 class="text-2xl font-bold text-gray-800 mb-4">Jalankan Analisis Inventaris Baru</h1>
+                <p class="text-gray-600 mb-6">Pilih tanggal analisis yang diinginkan, lalu klik tombol untuk memicu tugas. Sistem akan menunggu hasil analisis untuk dikirim kembali.</p>
+                
+                <div class="mb-4">
+                    <label for="summary-date-input" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Analisis:</label>
+                    <input 
+                        type="date" 
+                        id="summary-date-input" 
+                        name="summary_date"
+                        min="2025-04-02"
+                        max="2025-04-15"
+                        class="mt-1 block w-full sm:w-1/3 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-2 py-2"
+                    >
+                </div>
+                
+                <button
                     id="start-summary-btn"
                     class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                     data-start-url="{{ url_for('summary.start_summary') }}"
                     data-tasks-url="{{ url_for('tasks_ui.tasks') }}">
                     Mulai Proses Analisis
                 </button>
-                 <div id="notification-area" class="mt-6 font-medium"></div>
+                <div id="notification-area" class="mt-6 font-medium"></div>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-md">
-                 <h2 class="text-2xl font-bold text-gray-800 mb-4">Riwayat Analisis</h2>
-                 <div class="overflow-x-auto">
-                     <table class="min-w-full divide-y divide-gray-200">
-                         <thead class="bg-gray-50">
-                             <tr>
-                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task ID</th>
-                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok Tidak Cukup</th>
-                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok Nol</th>
-                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rata-rata Penjualan Harian</th>
-                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Laporan</th>
-                             </tr>
-                         </thead>
-                         <tbody class="bg-white divide-y divide-gray-200">
-                             {% for task in tasks %}
-                                 <tr class="hover:bg-gray-50 clickable-row" data-href="{{ url_for('summary.show_summary_result', task_id=task.task_id) }}">
-                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono"><code>{{ task.task_id }}</code></td>
-                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">{{ task.insufficient_stock_count | int }}</td>
-                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ task.zero_stock_count | int }}</td>
-                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ "%.2f" | format(task.average_daily_sales) }}</td>
-                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 hover:underline">View Report &rarr;</td>
-                                 </tr>
-                             {% else %}
-                                 <tr>
-                                     <td colspan="5" class="text-center text-gray-500 py-6">Tidak ada analisis yang telah dijalankan.</td>
-                                 </tr>
-                             {% endfor %}
-                         </tbody>
-                     </table>
-                 </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Riwayat Analisis</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok Tidak Cukup</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok Nol</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rata-rata Penjualan Harian</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Laporan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for task in tasks %}
+                                <tr class="hover:bg-gray-50 clickable-row" data-href="{{ url_for('summary.show_summary_result', task_id=task.task_id) }}">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono"><code>{{ task.task_id }}</code></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">{{ task.insufficient_stock_count | int }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ task.zero_stock_count | int }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ "%.2f" | format(task.average_daily_sales) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 hover:underline">View Report &rarr;</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-gray-500 py-6">Tidak ada analisis yang telah dijalankan.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
