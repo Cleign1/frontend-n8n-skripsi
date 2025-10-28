@@ -8,36 +8,72 @@ def get_all_tasks():
     """Get all active tasks"""
     redis_conn = current_app.redis_conn
     if not redis_conn:
+        print("Warning: Redis connection not available in get_all_tasks.")
         return []
 
     tasks = []
-    task_ids = redis_conn.lrange("active_tasks", 0, -1)
+    task_ids_from_list = []
+    try:
+        # Get the list of active task IDs from Redis
+        task_ids_from_list = redis_conn.lrange("active_tasks", 0, -1)
+        if not task_ids_from_list:
+            print("No active tasks found in Redis list 'active_tasks'.")
+            return [] # Return empty list if no IDs are found
+    except Exception as e:
+        print(f"Error reading 'active_tasks' list from Redis: {e}")
+        return [] # Return empty on error
 
-    for task_id in task_ids:
-        task_info = redis_conn.hgetall(f"task:{task_id}")
+    print(f"Found active task IDs in Redis list: {task_ids_from_list}") # Debugging line
+
+    unique_task_ids = set(task_ids_from_list)
+    print(f'Memproses {len(unique_task_ids)} unique task IDs from Redis list.') # Debugging line
+
+    for task_id in unique_task_ids:
+        task_info = {}
+        try:
+            # Fetch the details for each task ID
+            task_info = redis_conn.hgetall(f"task:{task_id}")
+        except Exception as e:
+            print(f"Error fetching details for task '{task_id}' from Redis: {e}")
+            continue # Skip this task if details can't be fetched
+
         if not task_info:
+            # This can happen if the task info expired or was manually deleted
+            print(f"Warning: No task details found in Redis hash for task ID '{task_id}' (from active_tasks list). Skipping.")
             continue
 
-        if task_id.startswith('prediksi_') or task_id.startswith('workflow_'):
-            # Check if there's a definitive final state saved for workflows
-            if task_id.startswith('workflow_'):
+        print(f"Processing task details for ID '{task_id}': {task_info}") # Debugging line
+
+        # --- START FIX: Process ALL tasks, but apply special logic for workflows ---
+
+        # Keep the logic to update status based on workflow finish state
+        if task_id.startswith('workflow_'):
+            finish_state_json = None
+            try:
                 finish_state_json = redis_conn.hget(f"workflow_state:{task_id}", "workflow_finish")
-                if finish_state_json:
-                    try:
-                        finish_state = json.loads(finish_state_json)
-                        # Use the status from workflow_finish if it's success or fail
-                        if finish_state.get('status') in ['success', 'fail']:
-                             # Map 'success'/'fail' from workflow state to 'SUCCESS'/'FAILURE' for consistency
-                            task_info['status'] = "SUCCESS" if finish_state['status'] == 'success' else "FAILURE"
-                            task_info['last_message'] = finish_state.get('message', task_info.get('last_message'))
-                    except json.JSONDecodeError:
-                        print(f"Warning: Could not decode workflow_finish JSON for task {task_id}")
-                        # Keep the status already present in task_info if decoding fails
+            except Exception as e:
+                 print(f"Error fetching workflow_finish state for task '{task_id}': {e}")
 
-            # Append the potentially updated task_info
-            tasks.append(task_info)
-            continue
+            if finish_state_json:
+                try:
+                    finish_state = json.loads(finish_state_json)
+                    # Use the status from workflow_finish if it's success or fail
+                    if finish_state.get('status') in ['success', 'fail']:
+                        # Map 'success'/'fail' from workflow state to 'SUCCESS'/'FAILURE'
+                        task_info['status'] = "SUCCESS" if finish_state['status'] == 'success' else "FAILURE"
+                        task_info['last_message'] = finish_state.get('message', task_info.get('last_message', '')) # Use existing message as fallback
+                        print(f"Updated task '{task_id}' status from workflow_finish state.") # Debugging line
+                except json.JSONDecodeError:
+                    print(f"Warning: Could not decode workflow_finish JSON for task {task_id}")
+                except Exception as e:
+                    print(f"Error processing workflow_finish state for task '{task_id}': {e}")
 
+
+        # Append ALL valid task_info objects retrieved from Redis hashes
+        tasks.append(task_info)
+        # --- END FIX ---
+
+    print(f"Returning {len(tasks)} tasks to be displayed.") # Debugging line
     return tasks
 
 
