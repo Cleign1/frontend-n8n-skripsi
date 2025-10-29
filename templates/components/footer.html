@@ -39,8 +39,8 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='javascript/footer.js') }}"></script>
-
+<!-- Load Socket.IO client first, then our scripts that use it -->
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
+<script src="{{ url_for('static', filename='javascript/footer.js') }}"></script>
 <script src="{{ url_for('static', filename='javascript/logs.js') }}"></script>

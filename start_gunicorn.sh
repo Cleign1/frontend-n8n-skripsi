@@ -10,11 +10,11 @@ HOST="0.0.0.0"
 PORT="5000"
 # The number of Gunicorn worker processes.
 # A common recommendation is (2 * number of CPU cores) + 1.
-WORKERS=3
+WORKERS=4
 # The location of your Flask app instance.
 # Format: <module_name>:<flask_app_variable_name>
-# Assuming your Flask app object is named 'app' inside 'run.py'
-APP_MODULE="run:app"
+# Use the dedicated WSGI entrypoint that monkey-patches with eventlet early
+APP_MODULE="wsgi:app"
 
 # --- Environment Activation ---
 echo "Activating virtual environment..."
@@ -39,10 +39,10 @@ trap cleanup SIGINT SIGTERM SIGHUP
 
 # --- Service Startup ---
 # Start Gunicorn in the background
-echo "Starting Gunicorn server..."
+echo "Starting Gunicorn server (eventlet worker)..."
 # Using 'set -m' enables job control, allowing us to kill the process group
 set -m
-uv run gunicorn --bind $HOST:$PORT --workers $WORKERS $APP_MODULE &
+uv run gunicorn --worker-class eventlet --bind $HOST:$PORT --workers $WORKERS $APP_MODULE &
 GUNICORN_PID=$!
 set +m
 

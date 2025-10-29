@@ -77,7 +77,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // --- SOCKET.IO LISTENER FOR REAL-TIME UPDATES ---
-    const socket = io(); // Connect to Socket.IO
+    // Force WebSocket-only to avoid invalid session errors across workers
+    const socket = io({
+        transports: ['websocket'],
+        upgrade: false,
+        pingInterval: 25000,
+        pingTimeout: 20000,
+    });
 
     socket.on('connect', () => {
         console.log('Footer connected via WebSocket.');
