@@ -21,13 +21,7 @@ from db_setup import db, Base, init_db_and_models
 _basedir = os.path.abspath(os.path.dirname(__file__))
 
 # Socket initialization
-# Explicitly use eventlet to match Gunicorn worker class in production
-# Enable CORS for Socket.IO to avoid cross-origin issues behind proxies
-socketio = SocketIO(
-    async_mode="eventlet",
-    message_queue=Config.CELERY_BROKER_URL,
-    cors_allowed_origins="*",
-)
+socketio = SocketIO(message_queue=Config.CELERY_BROKER_URL)
 
 class SocketIOHandler(logging.Handler):
     def emit(self, record):
