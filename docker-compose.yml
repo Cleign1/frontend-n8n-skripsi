@@ -1,14 +1,4 @@
 services:
-  # Service 1: Redis for Celery message broker and backend
-  redis:
-    image: redis:alpine
-    container_name: fe-n8n-redis
-    ports:
-      - "6379:6379"
-    restart: always
-    networks:
-      - fe-n8n-network
-
   # Service 2: The Flask Web Application (served with Gunicorn)
   app:
     build: . # Build the image from the Dockerfile in the current directory
@@ -16,8 +6,6 @@ services:
     ports:
       - "5000:5000" # Maps container port 5000 to host port 5000
     command: gunicorn --workers=4 --bind 0.0.0.0:5000 --log-level info "run:app"
-    depends_on:
-      - redis # Ensures redis starts before the app
     volumes:
       - .:/app # Mounts the project directory for live code changes
     restart: always
@@ -33,8 +21,6 @@ services:
     container_name: fe-n8n-worker
     # This command overrides the Dockerfile's CMD to start the celery worker
     command: celery -A make_celery.celery worker --loglevel=info --pool=solo -n worker1@%h
-    depends_on:
-      - redis # Ensures redis starts before the worker
     volumes:
       - .:/app # Mounts the project directory for live code changes
     restart: always
@@ -48,4 +34,4 @@ services:
 
 networks:
   fe-n8n-network:
-    driver: bridge
+    driver: bridge  
