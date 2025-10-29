@@ -84,13 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
     applyInitialState();
     
     // --- WebSocket Connection Setup ---
-    // Force WebSocket-only to avoid session invalidation across workers
-    const socket = io({
-        transports: ['websocket'],
-        upgrade: false,
-        pingInterval: 25000,
-        pingTimeout: 20000,
-    });
+    const socket = io();
 
     socket.on('connect', () => {
         console.log('Successfully connected to WebSocket server.');

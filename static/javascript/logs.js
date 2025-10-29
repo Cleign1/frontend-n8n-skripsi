@@ -58,13 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- WebSocket Connection ---
-    // Force pure WebSocket transport to avoid sticky-session issues across multiple workers
-    const socket = io({
-        transports: ['websocket'],
-        upgrade: false,
-        pingInterval: 25000,
-        pingTimeout: 20000,
-    });
+    const socket = io();
 
     socket.on('connect', () => {
         console.log('Connected to server via WebSocket.');
