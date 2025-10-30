@@ -2,6 +2,7 @@
 import requests
 from flask import current_app
 from celery_app import celery
+import os
 
 
 @celery.task(bind=True)
@@ -26,7 +27,8 @@ def trigger_n8n_summary_workflow(self, workflow_task_id, date_str):
         # Also include the workflow_task_id + date in the JSON body
         payload = {
             "workflow_task_id": workflow_task_id,
-            "date": date_str
+            "date": date_str,
+            'flask_webhook_url': f'{os.getenv("INTERNAL_API_BASE_URL", "http://localhost:5000")}/api/workflow/update'
         }
 
         response = requests.post(url_with_task_id, json=payload, timeout=15)
