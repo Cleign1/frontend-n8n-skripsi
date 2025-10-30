@@ -40,4 +40,4 @@ EXPOSE 5000
 # This will be overridden by docker-compose, but it's good practice to have a default.
 # It starts Gunicorn with 3 workers, binding to all interfaces on port 5000.
 # The application is expected to be the 'app' object in the 'run.py' file.
-CMD ["gunicorn", "--workers=3", "--bind", "0.0.0.0:5000", "run:app"]
+CMD ["flask", "--app", "run.py", "--host=0.0.0.0"]
