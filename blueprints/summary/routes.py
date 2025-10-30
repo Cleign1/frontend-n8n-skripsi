@@ -80,7 +80,7 @@ def start_summary():
             "n8n Workflow",
             datetime.now(jakarta_tz).isoformat(),
             status='PENDING',
-            workflow_type='summary'
+            workflow_type='summary',
         )
 
         return jsonify({
