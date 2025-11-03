@@ -1,7 +1,7 @@
 # Use the official Python 3.13 slim image as a base
 FROM python:3.13-slim
 
-LABEL org.opencontainers.image.source https://https://github.com/cleign1/frontend-n8n-skripsi
+LABEL org.opencontainers.image.source https://github.com/cleign1/frontend-n8n-skripsi
 
 # Set environment variables for Python and Debian
 ENV PYTHONUNBUFFERED=1
