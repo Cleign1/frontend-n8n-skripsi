@@ -11,6 +11,7 @@ services:
   # Service 2: The Flask Web Application (served with Gunicorn)
   app:
     build: . # Build the image from the Dockerfile in the current directory
+    image: ghcr.io/cleign1/frontend-skripsi-app:0.0.1
     container_name: fe-n8n-app
     # ports:
     #   - "5000:5000" # Maps container port 5000 to host port 5000
@@ -27,6 +28,7 @@ services:
   # Service 3: The Celery Worker
   worker:
     build: . # Also builds from the same Dockerfile
+    image: ghcr.io/cleign1/frontend-skripsi-celery:0.0.1
     container_name: fe-n8n-worker
     # This command overrides the Dockerfile's CMD to start the celery worker
     command: celery -A make_celery.celery worker --loglevel=info --pool=solo -n worker1@%h
