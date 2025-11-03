@@ -34,11 +34,25 @@ def rangkuman():
         for task_id in task_ids:
             task_data_json = redis_client.get(f'summary_result:{task_id}')
             if task_data_json:
-                task_data = json.loads(task_data_json)
-                # Backward-compatible key plus new explicit workflow_task_id
-                task_data['task_id'] = task_id
-                task_data['workflow_task_id'] = task_id
-                tasks.append(task_data)
+                
+                # --- START FIX 1 (Fixes TypeError) ---
+                task_data_list = json.loads(task_data_json)
+                
+                task_data_dict = {}
+                if isinstance(task_data_list, list) and task_data_list:
+                    task_data_dict = task_data_list[0] # Get dict from list
+                elif isinstance(task_data_list, dict):
+                    task_data_dict = task_data_list # Handle old data
+                else:
+                    continue # Skip empty or invalid data
+
+                # Add task_id to the DICTIONARY
+                task_data_dict['task_id'] = task_id
+                task_data_dict['workflow_task_id'] = task_id
+                
+                # Append the DICTIONARY to the tasks list
+                tasks.append(task_data_dict)
+                # --- END FIX 1 ---
 
     except redis.exceptions.ConnectionError:
         pass
@@ -112,9 +126,21 @@ def show_summary_result(task_id):
         if not result_data_json:
             abort(404, description="Result for this task not found. It might still be processing.")
 
-        result_data = json.loads(result_data_json)
+        result_data = json.loads(result_data_json) # This will be a list [..]
 
-        object_key = result_data.get('file_id')
+        # Get the dictionary from the list to access its keys
+        result_dict = {}
+        if isinstance(result_data, list) and result_data:
+            result_dict = result_data[0]
+        elif isinstance(result_data, dict):
+             # Handle old data that might still be a dict
+            result_dict = result_data
+        
+        
+        # --- START FIX 2 (Fixes missing 'file_id') ---
+        # Access the dictionary (result_dict), not the list (result_data)
+        object_key = result_dict.get('file_id') 
+        # --- END FIX 2 ---
 
         if not object_key:
             return render_template(
@@ -214,7 +240,7 @@ def show_summary_result(task_id):
 
         return render_template(
             'hasil_rangkuman.html',
-            result=result_data,
+            result=result_data, # Pass the original list [..] to the template
             task_id=task_id,
             csv_headers=csv_headers,
             csv_rows=csv_rows, # Pass the sorted (and limited) rows
