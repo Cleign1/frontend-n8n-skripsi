@@ -54,10 +54,12 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             // Handle success
+            // --- FIX: Changed data.task_id to data.workflow_task_id ---
             notificationArea.innerHTML = `
-                <p class="text-green-700">✅ Tugas berhasil dimulai (ID: ${data.task_id}).</p>
+                <p class="text-green-700">✅ Tugas berhasil dimulai (ID: ${data.workflow_task_id}).</p>
                 <p class="text-gray-600 mt-1">Anda sekarang dapat memantau progresnya di <a href="${tasksUrl}" class="font-bold text-blue-600 hover:underline">Halaman Tugas</a>.</p>
             `;
+            // --- END FIX ---
         })
         .catch(error => {
             // Handle failure
