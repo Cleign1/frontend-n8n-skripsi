@@ -21,29 +21,63 @@
                     Task ID: <code class="bg-gray-200 text-gray-700 rounded px-1">{{ task_id }}</code>
                 </p>
 
-                {% if result and result.top_5_understocked %}
+                {#--- FIX: Use correct Jinja2 tests 'is mapping' and 'is sequence' ---#}
+                {% if result is mapping %} {# Check if it's a dictionary #}
+                    {% set item = result %}
+                {% elif result is sequence and result|length > 0 %} {# Check if it's a non-empty list #}
+                    {% set item = result[0] %}
+                {% else %}
+                    {% set item = {} %} {# Failsafe, create empty dict #}
+                {% endif %}
+
+                <div class="mb-8 border-b border-gray-200 pb-8">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Ringkasan Analisis</h2>
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        
+                        <!-- <div class="bg-blue-50 border border-blue-200 p-6 rounded-lg shadow">
+                            <p class="text-sm font-medium text-blue-700">Total Produk</p>
+                            <p class="mt-1 text-4xl font-bold text-blue-900">{{ item.get('total_products', -99) | int }}</p>
+                        </div> -->
+
+                        <div class="bg-red-50 border border-red-200 p-6 rounded-lg shadow">
+                            <p class="text-sm font-medium text-red-700">Produk Stok Kurang</p>
+                            <p class="mt-1 text-4xl font-bold text-red-900">{{ item.get('insufficient_stock_count', -99) | int }}</p>
+                        </div>
+
+                        <div class="bg-yellow-50 border border-yellow-200 p-6 rounded-lg shadow">
+                            <p class="text-sm font-medium text-yellow-700">Produk Stok Nol</p>
+                            <p class="mt-1 text-4xl font-bold text-yellow-900">{{ item.get('zero_stock_count', -99) | int }}</p>
+                        </div>
+
+                        <div class="bg-green-50 border border-green-200 p-6 rounded-lg shadow">
+                            <p class="text-sm font-medium text-green-700">Rata-rata Penjualan Harian</p>
+                            <p class="mt-1 text-4xl font-bold text-green-900">{{ "%.2f" | format(item.get('average_daily_sales', -9.9)) }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% if item and item.get('top_5_understocked') %}
                 <div class="mb-8">
                     <h2 class="text-2xl font-semibold text-gray-800 mb-4">Top 5 Produk yang Kekurangan Stok</h2>
                     <div class="space-y-6">
-                        {% for item in result.top_5_understocked %}
+                        {% for row in item.get('top_5_understocked') %}
                         <div>
                             <div class="mb-2">
-                                <p class="font-semibold text-gray-800">{{ item.name }}</p>
-                                <p class="text-xs text-gray-500">ID: {{ item.id }}</p>
+                                <p class="font-semibold text-gray-800">{{ row.name }}</p>
+                                <p class="text-xs text-gray-500">ID: {{ row.id }}</p>
                             </div>
 
                             <div class="w-full bg-gray-200 rounded-full h-6 shadow-inner">
-                                {% set stock_percentage = (item.stock / item.predicted) * 100 if item.predicted > 0 else 0 %}
+                                {% set stock_percentage = (row.stock / row.predicted) * 100 if row.predicted > 0 else 0 %}
 
                                 <div class="bg-red-500 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
                                      style="width: {{ '%.2f'|format(stock_percentage) }}%;">
-                                     {{ item.stock }}
+                                     {{ row.stock }}
                                 </div>
                             </div>
 
                             <div class="flex justify-between text-sm mt-1">
-                                <span class="font-medium text-red-600">Stok Saat Ini: {{ item.stock }}</span>
-                                <span class="font-medium text-gray-600">Kebutuhan yang Diprediksi: {{ item.predicted }}</span>
+                                <span class="font-medium text-red-600">Stok Saat Ini: {{ row.stock }}</span>
+                                <span class="font-medium text-gray-600">Kebutuhan yang Diprediksi: {{ row.predicted }}</span>
                             </div>
                         </div>
                         {% endfor %}
