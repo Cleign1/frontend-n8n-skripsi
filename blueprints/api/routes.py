@@ -191,44 +191,97 @@ def save_summary_result():
     Webhook endpoint for n8n to post the final analysis result.
     It expects a `flask_task_id` in the query string to link the result
     to the correct Celery task.
+    
+    --- MODIFIED TO MERGE JSON DATA ---
+    It now fetches existing data, unwraps the 'json' key, and merges 
+    the new payload, allowing n8n to send data in separate calls.
     """
     task_id = request.args.get('flask_task_id')
     if not task_id:
         return jsonify({"error": "Query parameter 'flask_task_id' is required"}), 400
 
-    data = request.get_json()
-    if not data:
+    new_data = request.get_json()
+    if not new_data:
         return jsonify({"error": "Invalid JSON payload"}), 400
 
     try:
         redis_client = redis.Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], db=0,
                                    decode_responses=True)
 
-        # --- START FIX: Ensure file_id has .csv and inject date if missing ---
-        if 'file_id' in data and not data['file_id'].endswith('.csv'):
-             data['file_id'] += '.csv' # Add .csv if missing
-             print(f"Appended .csv to file_id for task {task_id}. New file_id: {data['file_id']}")
+        # --- START CORRECT MERGE LOGIC ---
+        existing_data_json = redis_client.get(f'summary_result:{task_id}')
+        final_data_item = {} # This will hold the merged dictionary
+        
+        # 1. Load existing data if it exists
+        if existing_data_json:
+            try:
+                existing_data = json.loads(existing_data_json)
+                # Handle both list (e.g., [{}]) and dict (e.g., {}) formats
+                if isinstance(existing_data, list) and existing_data:
+                    final_data_item = existing_data[0] # Get dict from list
+                elif isinstance(existing_data, dict):
+                    final_data_item = existing_data # Use dict directly
+            except json.JSONDecodeError:
+                 print(f"Warning: Corrupted JSON in Redis for {task_id}, will overwrite.")
+                 pass # final_data_item remains {}
+        
+        # 2. Determine what the new data is (list or dict)
+        new_data_item_raw = {}
+        if isinstance(new_data, list) and new_data:
+            new_data_item_raw = new_data[0] # This is {"json": {...}}
+        elif isinstance(new_data, dict):
+            new_data_item_raw = new_data # This might be {"json": {...}} or just {...}
+            
+        # --- THIS IS THE CRUCIAL UNWRAP LOGIC ---
+        # Check if the data is nested inside a 'json' key
+        if 'json' in new_data_item_raw and isinstance(new_data_item_raw['json'], dict):
+            new_data_item = new_data_item_raw['json'] # Get the inner object
+        else:
+            new_data_item = new_data_item_raw # Use the object as-is
+        # --- END UNWRAP LOGIC ---
+            
+        # 3. Merge new data (which is now unwrapped) into existing data
+        final_data_item.update(new_data_item)
+        
+        # 4. Standardize final data to be a list containing one dictionary
+        final_data = [final_data_item]
+        # --- END CORRECT MERGE LOGIC ---
 
-        if 'date' not in data or not data.get('date'):
+
+        # --- File ID and Date Injection Logic (runs on the merged data) ---
+        if 'file_id' in final_data[0] and not final_data[0]['file_id'].endswith('.csv'):
+             final_data[0]['file_id'] += '.csv' # Add .csv if missing
+             print(f"Appended .csv to file_id for task {task_id}. New file_id: {final_data[0]['file_id']}")
+
+        if 'date' not in final_data[0] or not final_data[0].get('date'):
             task_info = redis_client.hgetall(f"task:{task_id}")
-            prediction_date = task_info.get('prediction_date')
+            # Try to get prediction_date, fallback to created_at
+            prediction_date = task_info.get('prediction_date') or task_info.get('created_at')
             if prediction_date:
-                data['date'] = prediction_date
-                print(f"Injected missing date '{prediction_date}' into summary for task {task_id}")
+                # Try to parse just the date part if it's a full ISO timestamp
+                date_only = prediction_date.split('T')[0]
+                final_data[0]['date'] = date_only
+                print(f"Injected missing date '{date_only}' into summary for task {task_id}")
         # --- END FIX ---
 
 
-        # Store the entire JSON result from n8n
-        redis_client.set(f'summary_result:{task_id}', json.dumps(data), ex=604800) # Expires in 7 days
+        # Store the MERGED, UNWRAPPED JSON result
+        redis_client.set(f'summary_result:{task_id}', json.dumps(final_data), ex=604800) # Expires in 7 days
 
-        # Add the task_id to a persistent list for the history view
-        redis_client.lpush('summary_task_history', task_id)
+        # Only add to history ONCE
+        if not existing_data_json:
+            redis_client.lpush('summary_task_history', task_id)
 
         # Update the status of the original Celery task
-        redis_client.hset(f"task:{task_id}", "status", "Prediksi Selesai")
-        redis_client.hset(f"task:{task_id}", "last_message", "Analysis complete. Report received from n8n.")
+        # Check if both parts are present (one from stats, one from top_5)
+        if 'total_products' in final_data[0] and 'top_5_understocked' in final_data[0]:
+            redis_client.hset(f"task:{task_id}", "status", "Prediksi Selesai")
+            redis_client.hset(f"task:{task_id}", "last_message", "Analysis complete. Report received from n8n.")
+        else:
+            redis_client.hset(f"task:{task_id}", "status", "Processing")
+            redis_client.hset(f"task:{task_id}", "last_message", "Received partial data from n8n...")
 
-        return jsonify({"status": "success", "message": f"Result for task {task_id} saved."}), 200
+        return jsonify({"status": "success", "message": f"Result for task {task_id} saved/merged."}), 200
     except redis.exceptions.ConnectionError as e:
         return jsonify({"error": "Could not connect to Redis", "details": str(e)}), 500
     except Exception as e:
